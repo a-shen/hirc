@@ -33,8 +33,8 @@ import		 Commenter.Models
 
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user postId = do
-  createComment user postId Nothing
-  indexComments comments $ Just user 
+  createComment user postId Nothing  -- form for creating a new comment
+  indexComments comments $ Just user   -- list all the existing comments
 
 indexComments :: [Comment] -> Maybe UserName -> Html
 indexComments coms muser = do

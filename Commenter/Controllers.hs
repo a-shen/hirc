@@ -43,6 +43,7 @@ commentController = do
   REST.index $ do
     comments <- liftLIO . withCommentPolicy $ findAll $ select [] "comments"
     return $ respondHtml $ showPage comments "currentUser" Nothing
+    --return $ respondHtml $ showPage comments (currentUser) (postId)
     --find out how to add in the id of the post you're commenting on
     --find out how to get the username of the current user
  
