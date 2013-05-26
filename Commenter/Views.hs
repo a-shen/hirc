@@ -1,4 +1,5 @@
 {-# LANGUAGE OverloadedStrings #-}
+
 module Commenter.Views where
 
 import           Prelude hiding (div, span, head, id)
@@ -25,7 +26,6 @@ import           Text.Blaze.Html.Renderer.Utf8
 import qualified Text.Blaze.Html.Renderer.String as SR
 
 --import		 Text.XHtml.Transitional
-
 --import           LBH.ActiveCode ( extractActieCodeBlocks -- not a typo
                                 --, activeCodeToInactiveBlocks ) 
 import		 LBH.Views
@@ -79,7 +79,7 @@ showAllReplies comment allComments muser = do
       then do
         li $ showComment c muser
         showAllReplies c allComments muser
-      else "" -- do nothing
+      else "" -- do nothing.
 
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
   head $ do 

@@ -16,7 +16,7 @@ data Comment = Comment
     { commentId        :: Maybe ObjectId
     , commentAuthor    :: UserName
     , commentAssocPost :: ObjectId -- what post it belongs to
-    , commentText :: String  -- what it says
+    , commentText :: String
     , commentInReplyTo :: Maybe ObjectId  -- comment it's in reply to
     } deriving Show
 

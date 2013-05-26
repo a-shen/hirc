@@ -1,5 +1,4 @@
-{-# LANGUAGE DeriveDataTypeable
-           , FlexibleContexts
+{-# LANGUAGE OverloadedStrings
            , MultiParamTypeClasses
            , ScopedTypeVariables
            , OverloadedStrings #-}
