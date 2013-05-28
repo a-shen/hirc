@@ -50,7 +50,7 @@ indexComments coms muser = do
 createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 createComment username postId mparent = do
   script ! src "/static/js/comments.js" $ ""
-  form ! action "/comments" ! method "POST" $ do
+  form ! action "/comments" ! name "commentForm" ! method "POST" $ do
     input ! type_ "hidden" ! name "author" ! value (toValue username)
     input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
     case mparent of
