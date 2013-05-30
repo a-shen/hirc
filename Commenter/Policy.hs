@@ -1,8 +1,10 @@
 {-# LANGUAGE OverloadedStrings
            , MultiParamTypeClasses
            , ScopedTypeVariables
+           , DeriveDataTypeable
            , OverloadedStrings #-}
 module Commenter.Policy ( CommentPolicy
+                          , personaLoginEmailToUid
                           , withCommentPolicy
                           , findAll, findAllP
                           ) where
@@ -68,6 +70,55 @@ instance DCLabeledRecord CommentPolicy Comment where
 withCommentPolicy :: DBAction a -> DC a
 withCommentPolicy act = withPolicyModule $
   \(CommentPolicyTCB noPrivs) -> act
+
+-- **IF THERE'S AN ERROR WITH PERSONA, IT'S PROBABLY BECAUSE THIS IS COMMENTED OUT**
+
+{-
+-- | Requests are labeled by email addreses, relabel to id's.
+personaLoginEmailToUid :: Middleware
+personaLoginEmailToUid app conf lreq = do
+  meu <- liftLIO . withPolicyModule $ \(LBHPolicyTCB privs) -> do
+    let i     = dcIntegrity $ requestLabel conf
+        s     = dcSecrecy   $ requestLabel conf
+        ps    = toList i
+        email = head . head $ ps
+    -- Label must have format <_, principal>
+    musr <- if i == dcFalse || length ps /= 1 || length (head ps) /= 1
+              then return Nothing
+              else do mu <- findByP privs "users" "email" $
+                              T.decodeUtf8 . principalName $ email
+                      return $ (principal . T.encodeUtf8 . userId) `liftM` mu
+    return $ do { u <- musr ; return $ mkXfms email u }
+  case meu of
+    Nothing -> app conf lreq
+    Just (e2u, u2e) -> do
+         let conf' = conf { browserLabel = dcLabel
+                              (e2u $ dcSecrecy $ browserLabel conf) dcTrue
+                          , requestLabel = dcLabel
+                               dcTrue (e2u $ dcIntegrity $ requestLabel conf)
+                          }
+         setClearanceP allPrivTCB $ browserLabel conf'
+         lreq' <- relabelLabeledP allPrivTCB (requestLabel conf') lreq
+         resp <- app conf' lreq'
+         curl <- getLabel
+         curc <- getClearance
+         let curc' = dcLabel (u2e $ dcSecrecy curc) (u2e $ dcIntegrity curc)
+             curl' = dcLabel (u2e $ dcSecrecy curl) (u2e $ dcIntegrity curl)
+         -- raise current clearance, considering the current label
+         setClearanceP allPrivTCB $ curc' `upperBound` curl
+         -- change current label
+         setLabelP allPrivTCB curl'
+         -- lower current clearance
+         setClearanceP allPrivTCB $ curc'
+         return resp
+    where mkXfms e u = ( \cmp -> xfm (\x -> if x == e then u else x) cmp
+                       , \cmp -> xfm (\x -> if x == u then e else x) cmp )
+          xfm f cmp | cmp == dcTrue || cmp == dcFalse = cmp
+          xfm f cmp = let cs = unDCFormula cmp
+                      in dcFormula $
+                           Set.map (\c -> Clause $ Set.map f $ unClause c) cs
+-}
+
 
 {-
 instance Groups CommentPolicy where

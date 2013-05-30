@@ -5,6 +5,7 @@ module Commenter.Views where
 import           Prelude hiding (div, span, head, id)
 import           LBH.MP
 import           LBH.Utils
+import		 Debug.Trace
 
 import           Control.Monad
 import           Data.Maybe
@@ -25,19 +26,20 @@ import qualified Text.Blaze.Html5.Attributes as A
 import           Text.Blaze.Html.Renderer.Utf8
 import qualified Text.Blaze.Html.Renderer.String as SR
 
---import		 Text.XHtml.Transitional
 --import           LBH.ActiveCode ( extractActieCodeBlocks -- not a typo
                                 --, activeCodeToInactiveBlocks ) 
 import		 LBH.Views
 import		 Commenter.Models
 
-showPage :: [Comment] -> UserName -> B.ObjectId -> Html
-showPage comments user postId = do
-  createComment user postId Nothing  -- form for creating a new comment
-  indexComments comments $ Just user   -- list all the existing comments
+showPage :: [Comment] -> UserName -> Maybe B.ObjectId -> Html
+showPage comments user mpid = trace "showPage " $ do
+  case mpid of
+    Just pid -> trace ("pid:" ++ (show pid)) $ createComment user pid Nothing
+    Nothing -> trace "pid is Nothing" $ ""
+  indexComments comments $ Just user   -- list all comments
 
 indexComments :: [Comment] -> Maybe UserName -> Html
-indexComments coms muser = do
+indexComments coms muser = trace "indexComments" $ do
   let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   div ! name "commentList" $ do
     forM_ comments $ \comment -> do
@@ -48,15 +50,16 @@ indexComments coms muser = do
         Just reply -> ""
 
 createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
-createComment username postId mparent = do
+createComment username postId mparent = trace "createComment" $ do
   script ! src "/static/js/comments.js" $ ""
-  form ! action "/comments" ! name "commentForm" ! method "POST" $ do
-    input ! type_ "hidden" ! name "author" ! value (toValue username)
-    input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
-    case mparent of
-      Just parent -> do
-        input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
-      Nothing -> ""
+  trace ("username: " ++ (T.unpack username)) $ do
+    form ! action "/comments" ! name "commentForm" ! method "POST" $ do
+      input ! type_ "hidden" ! name "author" ! value (toValue username)
+      input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
+      case mparent of
+        Just parent -> trace ("parent: " ++ (show parent)) $ do
+          input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
+        Nothing -> ""
 
 showComment :: Comment -> Maybe UserName -> Html
 showComment comment muser = do
@@ -79,13 +82,14 @@ showAllReplies comment allComments muser = do
       then do
         li $ showComment c muser
         showAllReplies c allComments muser
-      else "" -- do nothing.
+      else "" -- do nothing
 
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
   head $ do 
     title ctitle
     stylesheet "/static/css/bootstrap.css"
     stylesheet "/static/css/application.css"
+    script ! src "https://login.persona.org/include.js" $ ""
   body $ do
     script ! src "/static/js/jquery.js" $ ""
     script ! src "/static/js/bootstrap.js" $ ""
