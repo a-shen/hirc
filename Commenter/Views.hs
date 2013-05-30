@@ -34,14 +34,14 @@ import		 Commenter.Models
 showPage :: [Comment] -> UserName -> Maybe B.ObjectId -> Html
 showPage comments user mpid = trace "showPage " $ do
   case mpid of
-    Just pid -> trace ("pid:" ++ (show pid)) $ createComment user pid Nothing
+    Just pid -> trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
     Nothing -> trace "pid is Nothing" $ ""
   indexComments comments $ Just user   -- list all comments
 
 indexComments :: [Comment] -> Maybe UserName -> Html
 indexComments coms muser = trace "indexComments" $ do
   let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
-  div ! name "commentList" $ do
+  div ! name "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
       case (commentInReplyTo comment) of
         Nothing -> do
@@ -49,17 +49,18 @@ indexComments coms muser = trace "indexComments" $ do
           showAllReplies comment comments muser
         Just reply -> ""
 
-createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
-createComment username postId mparent = trace "createComment" $ do
-  script ! src "/static/js/comments.js" $ ""
+newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
+newComment username postId mparent = trace "newComment" $ do
   trace ("username: " ++ (T.unpack username)) $ do
-    form ! action "/comments" ! name "commentForm" ! method "POST" $ do
+    let act = ("/" ++ (show postId) ++ "/comments")
+    form ! action (toValue act) ! name "commentForm" ! method "POST" $ do
       input ! type_ "hidden" ! name "author" ! value (toValue username)
       input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
       case mparent of
         Just parent -> trace ("parent: " ++ (show parent)) $ do
           input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
-        Nothing -> ""
+        Nothing -> trace "no parent" $ ""
+    script ! src "/static/js/comments.js" $ ""
 
 showComment :: Comment -> Maybe UserName -> Html
 showComment comment muser = do
@@ -70,7 +71,7 @@ showComment comment muser = do
   case muser of
     Just user -> do
       p $ "Reply to this comment:"
-      createComment user (commentAssocPost comment) $ commentId comment
+      newComment user (commentAssocPost comment) $ commentId comment
     Nothing -> ""
 
 showAllReplies :: Comment -> [Comment] -> Maybe UserName -> Html
