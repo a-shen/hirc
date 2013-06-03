@@ -56,6 +56,9 @@ newComment username postId mparent = trace "newComment" $ do
     form ! action (toValue act) ! name "commentForm" ! method "POST" $ do
       input ! type_ "hidden" ! name "author" ! value (toValue username)
       input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
+      div $ do
+        label ! for "text" $ "Post a new comment"
+        input ! type_ "text" ! name "text" ! id "text"
       case mparent of
         Just parent -> trace ("parent: " ++ (show parent)) $ do
           input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)

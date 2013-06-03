@@ -1,5 +1,16 @@
 $(document).ready(function() {
 
+<<<<<<< HEAD
+=======
+  // util
+
+  var removeFirst = function(val, arr) {
+    var idx = $.inArray(val, arr);
+    if(idx >= 0 ) { arr.splice(idx, 1);}
+    return arr;
+  };
+
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
   if($("#newPost").length > 0 || $("#editPost").length > 0) {
     //
     // New and Edit
@@ -106,10 +117,13 @@ $(document).ready(function() {
       do_preview=!do_preview;
     });
 
+<<<<<<< HEAD
     $("#post-refresh-preview-btn").click( function () {
       refresh_preview();
     });
 
+=======
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
     $("#post-save-btn").click( function () {
       set_tags("#editPost");
       $.ajax({ url  : '/posts'
@@ -172,12 +186,15 @@ $(document).ready(function() {
 
     var cur_users = [];
 
+<<<<<<< HEAD
     var removeFirst = function(val, arr) {
       var idx = $.inArray(val, arr);
       if(idx >= 0 ) { arr.splice(idx, 1);}
       return arr;
     };
 
+=======
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
     $('#post-add-collaborator').typeahead( {
       source : function(query, process) {
         $.ajax({ url  : '/users'
@@ -251,6 +268,31 @@ $(document).ready(function() {
     // Show
     //
 
+<<<<<<< HEAD
+=======
+    // Cache all dependencies
+    // id -> [all-deps]
+    var cachedDeps = {};
+
+    // Cache containing reverse dependencies
+    // id -> [ all-rev-deps]
+    var cachedRevDeps = {};
+
+    // Map from id -> CodeMirror object
+    var mapIdCM = [];
+
+    // count line start of a block;
+    // if it has dependencies, their lines are just added
+    var getLineCount = function(id) {
+      var count = 0;
+      $.map(cachedDeps[id],function(i) {
+        if(mapIdCM[i])
+          count += mapIdCM[i].doc.size;
+      });
+      return count+1;
+    }
+
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
     $(".raw-active-code").map( function() {
       var mkController = function(div_id, id) {
         // create the [cog] Execute link
@@ -265,6 +307,7 @@ $(document).ready(function() {
                 $("<pre>", { id: res_id }).appendTo($("#"+div_id));
               }
               $("#"+res_id).html(btn+"<i class=\"icon-repeat\"></i> Executing...")
+<<<<<<< HEAD
           .attr("class","exec-result alert alert-info");
         // ask parent to resize iframe
         window.parent.postMessage("preview-resize","*");
@@ -296,6 +339,62 @@ $(document).ready(function() {
             }
             , class : "btn btn-inverse btn-mini pull-right"
               , html : "<i class=\"icon-cog icon-white\"></i>EXECUTE"})
+=======
+                           .attr("class","exec-result alert alert-info");
+              // ask parent to resize iframe
+              window.parent.postMessage("preview-resize","*");
+              
+              // Create deps+source
+              var source = "";
+              var usedDeps = []; //already concatendated dependencies
+              var getDependencies = function getDependencies(depId) {
+                    if($.inArray(depId, usedDeps)>=0) return;
+                    usedDeps.push(depId);
+                    var dep = $("#"+depId);
+                    if( dep && dep.data("lang") && 
+                        dep.data("lang") === $("#"+id).data("lang") ) {
+                      // get its dependencies
+                      var deps = dep.data("deps") || [];
+                      deps.forEach(getDependencies);
+                    }
+                    // append current dependency
+                    source += dep.text() + "\n";
+                  };
+              
+              // get dependencies of top level source
+              var deps = $("#"+id).data("deps") || [];
+              deps.forEach(getDependencies);
+              source += $("#"+id).text();
+              //
+              //
+
+              // AJAX to execute code
+              $.ajax({ url:'/exec'
+                , type: 'POST'
+                , contentType: 'application/json'
+                , data : JSON.stringify({ "id": id
+                  , "lang": $("#"+id).data("lang")
+                  , "source": source})
+              }).done(function(data) {
+                var result_class = "exec-result alert alert-error";
+                if (data.code == 0) {
+                  result_class = "exec-result alert alert-success";
+                }
+                $("#"+res_id).html("");
+                $("#"+res_id).attr("class",result_class);
+                $("<b>", { text : data.result }).appendTo($("#"+res_id))
+                window.parent.postMessage("preview-resize","*");
+              }).fail(function(data) {
+                $("#"+res_id).attr("class","exec-result alert alert-error");
+                $("#"+res_id).html(btn+"<i class=\"icon-warning-sign\"></i> ");
+                $("<strong>", { text : "Sorry, this seems like a server error."
+                }).appendTo($("#"+res_id))
+              });
+              return false; //click
+            }
+            , class : "btn btn-inverse btn-mini pull-right"
+            , html : "<i class=\"icon-cog icon-white\"></i>EXECUTE"})
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
       };
 
       // ----------------------------------------------------------------
@@ -310,19 +409,55 @@ $(document).ready(function() {
       switch(mode) {
         case "c"  : mode = "text/x-csrc"  ; break;
         case "cpp": mode = "text/x-c++src"; break;
+<<<<<<< HEAD
       }
       //
 
+=======
+        case "shell":
+        case "sh":  
+        case "bash":  mode = "shell"; break;
+      }
+
+      // compute all the forward dependencies
+      (function() {
+        var dirDeps = [id];
+        var findDeps = function findDeps(depId) {
+              // already looked at
+              if($.inArray(depId, dirDeps)>=0) return;
+              dirDeps.push(depId);
+              var dep = $("#"+depId);
+              if( dep && dep.data("lang") && 
+                  dep.data("lang") === $("#"+id).data("lang") ) {
+                // get its dependencies
+                $.map(dep.data("deps") || [],findDeps)
+              }
+            };
+        $.map($("#"+id).data("deps") || [], findDeps);
+        removeFirst(id,dirDeps);
+        cachedDeps[id]=dirDeps;
+      })();
+
+
+              
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
       // create editor
       var cm  = CodeMirror.fromTextArea(raw[0], { lineWrapping: true
         , theme: "elegant"
         , mode: mode
         , lineNumbers: true
+<<<<<<< HEAD
       });
+=======
+        , firstLineNumber: getLineCount(id)
+      });
+      mapIdCM[id]=cm;
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
 
       // make sure text field (used to exec) is updated:
       cm.on("change", function(inst,chObj) {
         raw.text(inst.getValue());
+<<<<<<< HEAD
       });
 
       // Create active-code controller
@@ -334,4 +469,59 @@ $(document).ready(function() {
 
   })();
 
+=======
+        // update line counts of all blocks that depends on this
+        // and all blocks that depend on them, etc.
+        if(!cachedRevDeps[id]) { (function() {
+          // add reverse dependencies to cache
+          var revDeps = [id];
+          // seen before:
+          var usedDeps = $("#"+id).data("deps").slice(0) || []; 
+          usedDeps.push(id);
+          $(".raw-active-code").each(function(idx,item) { 
+            // if aready checked item
+            if($.inArray(item.id,usedDeps)>=0) return;
+            // else
+            usedDeps.push(item.id);
+
+            // get all dependencies of current item
+            var deps = $(this).data("deps") || []; 
+            // if not in this item
+            var doUpdate = false;
+            // does the item depend on any of the rev deps?
+            $.map(revDeps, function(up) {
+              if(!doUpdate && $.inArray(up,deps)>=0) { 
+                doUpdate = true; 
+              }
+            });
+            if(doUpdate) { revDeps.push(item.id); }
+          });
+          // remove id form the blocks that need updating
+          removeFirst(id,revDeps);
+          cachedRevDeps[id]=revDeps;
+        })();
+        }
+
+        $.map(cachedRevDeps[id], function(dId) {
+          if(mapIdCM[dId])
+            mapIdCM[dId].setOption("firstLineNumber",getLineCount(dId));
+        });
+
+      });
+
+      // Create active-code controller, unless explicitly
+      // specified to not be executable
+      console.log("noexec? "+$("#"+id).data("noexec"));
+      if($("#"+id).data("noexec")) {
+        $("<div>", { html : "&nbsp;" }).appendTo($("#"+div_id));
+      } else {
+        var exec = mkController(div_id,id);
+        $("<div>", { class : "active-controller-btn"
+                   , html : exec }).appendTo($("#"+div_id));
+      }
+    }); //map over .raw-active-code
+
+  })();//show
+  
+>>>>>>> 84994a693ceec8d171adfe3d3f08528cd964c73a
 });

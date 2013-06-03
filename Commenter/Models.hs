@@ -55,4 +55,3 @@ lookupObjId n d = case lookup n d of
           _ -> fail $ "lookupObjId: cannot extract id from " ++ show n
   where maybeRead = fmap fst . listToMaybe . reads
 
-

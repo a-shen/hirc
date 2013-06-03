@@ -13,14 +13,19 @@ import           Prelude hiding (lookup)
 import           Data.Maybe
 import qualified Data.List as List
 import qualified Data.Text as T
+import qualified Data.Text.Encoding as T
 import qualified Data.ByteString.Lazy as L
 import qualified Data.ByteString.Char8 as S8
 import           Data.Typeable
+import qualified Data.Set as Set
+import qualified Data.List as List
 
 import           Control.Monad
 
 import           LIO
 import           LIO.DCLabel
+import           LIO.DCLabel.Core
+import           LIO.DCLabel.Privs.TCB (allPrivTCB)
 
 import           Hails.Data.Hson
 import           Hails.Web hiding (body)
@@ -35,7 +40,7 @@ import           Hails.HttpServer.Auth
 import           Hails.Database.Structured hiding (findAll, findAllP)
 
 import           Commenter.Models
-import		 LBH.MP
+import           LBH.MP
 
 import LIO.TCB
 
@@ -71,8 +76,7 @@ withCommentPolicy :: DBAction a -> DC a
 withCommentPolicy act = withPolicyModule $
   \(CommentPolicyTCB noPrivs) -> act
 
--- **IF THERE'S AN ERROR WITH PERSONA, IT'S PROBABLY BECAUSE THIS IS COMMENTED OUT**
-
+-- **IF THERE'S AN ERROR WITH PERSONA, IT'S PROBABLY BECAUSE THIS PART IS COMMENTED OUT**
 {-
 -- | Requests are labeled by email addreses, relabel to id's.
 personaLoginEmailToUid :: Middleware
@@ -118,8 +122,6 @@ personaLoginEmailToUid app conf lreq = do
                       in dcFormula $
                            Set.map (\c -> Clause $ Set.map f $ unClause c) cs
 -}
-
-
 {-
 instance Groups CommentPolicy where
   groupsInstanceEndorse = CommentPolicyTCB noPriv
