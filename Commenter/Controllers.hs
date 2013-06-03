@@ -44,8 +44,9 @@ commentController = do
     mu <- currentUser
     sid <- queryParam "pid"
     let str = S8.unpack $ fromJust sid  -- post id as a string
-    let pid = read str
-    comments <- liftLIO . withCommentPolicy $ findAll $ select [] "comments"
+    let pid = read str -- post id as an ObjectId
+    comments <- liftLIO . withCommentPolicy $
+      findAll $ select ["post" -: pid] "comments"
     case mu of
       Just u -> do
         let username = userId $ fromJust mu
@@ -65,29 +66,3 @@ commentController = do
 
   --REST.update
 
-{-
---stolen from LBH
-maybeRegister :: Controller Response -> Controller Response
-maybeRegister ctrl = trace "maybeRegister" $ do
-  muName <- getHailsUser
-  trace "here" $ do
-    musr   <- currentUser
-    trace "got user" $ do
-      if isJust muName && isNothing musr
-        then return $ redirectTo "/users/new"
-        else ctrl
-
-withAuthUser :: (User -> Controller Response) -> Controller Response
-withAuthUser act = maybeRegister $ withUserOrDoAuth $ const $  do
-  musr <- currentUser
-  maybe (return serverError) act musr
-
-currentUser :: Controller (Maybe User)
-currentUser = do
-  mu <- getHailsUser
-  trace "got mu" $ do
-    case mu of
-      Nothing -> trace "user is Nothing" $ return Nothing
-      Just u -> trace "user exists" $ liftLIO $ withLBHPolicy $ trace "user exists" $ do
-        findBy "users" "email" u
--}

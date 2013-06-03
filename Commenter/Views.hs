@@ -39,7 +39,7 @@ showPage comments user mpid = trace "showPage " $ do
   indexComments comments $ Just user   -- list all comments
 
 indexComments :: [Comment] -> Maybe UserName -> Html
-indexComments coms muser = trace "indexComments" $ do
+indexComments coms muser = trace ("indexComments; comments: " ++ (show coms)) $ do
   let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   div ! name "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
