@@ -16,7 +16,7 @@ import		 Debug.Trace
 data Comment = Comment
     { commentId        :: Maybe ObjectId
     , commentAuthor    :: UserName
-    , commentAssocPost :: Maybe ObjectId -- what post it belongs to
+    , commentAssocPost :: ObjectId -- what post it belongs to
     , commentText :: String
     , commentInReplyTo :: Maybe ObjectId  -- comment it's in reply to
     } deriving Show
@@ -31,7 +31,7 @@ instance DCRecord Comment where
     let parent = lookupObjId "parent" doc -- the comment it's in reply to
     return Comment { commentId = cid
                    , commentAuthor = author
-                   , commentAssocPost = post
+                   , commentAssocPost = fromJust post
                    , commentText = text
                    , commentInReplyTo = parent }
 

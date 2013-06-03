@@ -33,6 +33,9 @@ import		 Commenter.Models
 
 showPage :: [Comment] -> UserName -> Maybe B.ObjectId -> Html
 showPage comments user mpid = trace "showPage " $ do
+  script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
+  script ! src "http://malsup.github.com/jquery.form.js" $ ""
+  script ! src "/static/js/comments.js" $ ""
   case mpid of
     Just pid -> trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
     Nothing -> trace "pid is Nothing" $ ""
@@ -41,7 +44,7 @@ showPage comments user mpid = trace "showPage " $ do
 indexComments :: [Comment] -> Maybe UserName -> Html
 indexComments coms muser = trace ("indexComments; comments: " ++ (show coms)) $ do
   let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
-  div ! name "commentList" $ trace "here" $ do
+  div ! name "commentList" ! id "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
       case (commentInReplyTo comment) of
         Nothing -> do
@@ -50,32 +53,33 @@ indexComments coms muser = trace ("indexComments; comments: " ++ (show coms)) $ 
         Just reply -> ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
-newComment username postId mparent = trace "newComment" $ do
+newComment username postId mparent = trace "newComment" $ 
+  createComment username postId mparent "Post a comment"
+
+createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
+createComment username postId mparent tag = trace "createComment" $ do
   trace ("username: " ++ (T.unpack username)) $ do
     let act = ("/" ++ (show postId) ++ "/comments")
-    form ! action (toValue act) ! name "commentForm" ! method "POST" $ do
+    form ! action (toValue act) ! name "commentForm" ! id "commentForm" ! method "POST" $ do
       input ! type_ "hidden" ! name "author" ! value (toValue username)
       input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
       div $ do
-        label ! for "text" $ "Post a new comment"
+        label ! for "text" $ tag -- either "post comment" or "reply"
         input ! type_ "text" ! name "text" ! id "text"
       case mparent of
-        Just parent -> trace ("parent: " ++ (show parent)) $ do
+        Just parent -> do
           input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
-        Nothing -> trace "no parent" $ ""
-      p $ input ! type_ "submit" ! value "Post comment"
-    trace "running js" $ script ! src "/static/js/comments.js" $ ""
+        Nothing -> ""
+      p $ input ! type_ "submit" ! value "Post"
 
 showComment :: Comment -> Maybe UserName -> Html
 showComment comment muser = do
-  p $ do
-    b $ toHtml $ commentAuthor comment
+  h3 $ toHtml $ commentAuthor comment
   p $ toHtml $ show $ B.timestamp $ fromJust $ commentId comment
   p $ toHtml $ commentText comment
   case muser of
     Just user -> do
-      p $ "Reply to this comment:"
-      newComment user (fromJust $ commentAssocPost comment) $ commentId comment
+      createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment"
     Nothing -> ""
 
 showAllReplies :: Comment -> [Comment] -> Maybe UserName -> Html
@@ -89,6 +93,7 @@ showAllReplies comment allComments muser = do
         showAllReplies c allComments muser
       else "" -- do nothing
 
+{-
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
   head $ do 
     title ctitle
@@ -99,4 +104,5 @@ respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
     script ! src "/static/js/jquery.js" $ ""
     script ! src "/static/js/bootstrap.js" $ ""
     content
+-}
 

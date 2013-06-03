@@ -27,7 +27,7 @@ import           Commenter.Models
 import           Commenter.Views
 import           LBH.MP
 import           LBH.Controllers
---import           LBH.ActiveCode
+import           LBH.Views
 import           Data.Aeson (decode, encode, toJSON)
 
 server :: Application
@@ -40,29 +40,28 @@ server = mkRouter $ do
 
 commentController :: RESTController
 commentController = do
-  REST.index $ maybeRegister $ trace "REST.index" $ do
-    mu <- currentUser
-    sid <- queryParam "pid"
-    let str = S8.unpack $ fromJust sid  -- post id as a string
-    let pid = read str -- post id as an ObjectId
-    comments <- liftLIO . withCommentPolicy $
-      findAll $ select ["post" -: pid] "comments"
-    case mu of
-      Just u -> do
-        let username = userId $ fromJust mu
-        return $ trace ("pid: " ++ str) $
-          respondHtml "Comments" $ showPage comments username $ Just pid
-      Nothing -> do
-        let username = T.pack "Anonymous"
-        return $ trace ("pid: " ++ str) $ 
-          respondHtml "Comments" $ showPage comments username $ Just pid
+
+  REST.index $ maybeRegister $ trace "REST.index" $ index
 
   REST.create $ withAuthUser $ const $ do --find out what const stands for
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withCommentPolicy $ insert "comments" ldoc
-    return $ redirectTo $ "/"
+    index
 
-  --REST.delete
-
-  --REST.update
+index = do
+  mu <- currentUser
+  sid <- queryParam "pid"
+  let str = S8.unpack $ fromJust sid  -- post id as a string
+  let pid = read str -- post id as an ObjectId
+  comments <- liftLIO . withCommentPolicy $ trace ("pid: " ++ (show pid)) $
+    findAll $ select ["post" -: pid] "comments"
+  case mu of
+    Just u -> do
+      let username = userId $ fromJust mu
+      return $ trace ("pid: " ++ str) $
+        respondHtml mu $ showPage comments username $ Just pid
+    Nothing -> do
+      let username = T.pack "Anonymous"
+      return $ trace ("pid: " ++ str) $ 
+        respondHtml mu $ showPage comments username $ Just pid
 
