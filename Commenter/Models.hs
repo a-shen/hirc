@@ -11,23 +11,24 @@ import           Hails.Web
 import           Hails.Database
 import           Hails.Database.Structured
 import		 LBH.MP
+import		 Debug.Trace
 
 data Comment = Comment
     { commentId        :: Maybe ObjectId
     , commentAuthor    :: UserName
-    , commentAssocPost :: ObjectId -- what post it belongs to
+    , commentAssocPost :: Maybe ObjectId -- what post it belongs to
     , commentText :: String
     , commentInReplyTo :: Maybe ObjectId  -- comment it's in reply to
     } deriving Show
 
 
 instance DCRecord Comment where
-  fromDocument doc = do
+  fromDocument doc = trace "fromDoc" $ do
     let cid = lookupObjId "_id" doc
     author <- lookup "author" doc
-    post <- lookup "post" doc
+    let post = lookupObjId "post" doc
     text <- lookup "text" doc
-    parent <- lookup "parent" doc -- the comment it's in reply to
+    let parent = lookupObjId "parent" doc -- the comment it's in reply to
     return Comment { commentId = cid
                    , commentAuthor = author
                    , commentAssocPost = post

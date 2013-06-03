@@ -40,7 +40,7 @@ showPage comments user mpid = trace "showPage " $ do
 
 indexComments :: [Comment] -> Maybe UserName -> Html
 indexComments coms muser = trace ("indexComments; comments: " ++ (show coms)) $ do
-  let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
+  let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   div ! name "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
       case (commentInReplyTo comment) of
@@ -75,7 +75,7 @@ showComment comment muser = do
   case muser of
     Just user -> do
       p $ "Reply to this comment:"
-      newComment user (commentAssocPost comment) $ commentId comment
+      newComment user (fromJust $ commentAssocPost comment) $ commentId comment
     Nothing -> ""
 
 showAllReplies :: Comment -> [Comment] -> Maybe UserName -> Html
