@@ -26,13 +26,17 @@ import           Commenter.Policy
 import           Commenter.Models
 import           Commenter.Views
 import           LBH.MP
+import           LBH.Controllers
 --import           LBH.ActiveCode
 import           Data.Aeson (decode, encode, toJSON)
 
 server :: Application
 server = mkRouter $ do
-  routeVar "pid" $ do
-    routeName "comments" commentController
+  Frank.post "/users" usersCreate
+  routeAll . personaLoginEmailToUid . mkRouter $ do
+    routeVar "pid" $ do
+      routeName "comments" commentController
+    routeName "users" usersController
 
 commentController :: RESTController
 commentController = do
@@ -48,7 +52,7 @@ commentController = do
         return $ trace ("pid: " ++ str) $
           respondHtml "Comments" $ showPage comments username $ Just pid
       Nothing -> do
-        let username = T.pack "Anonymous" --for now the persona stuff doesn't work, so people will just have to deal with being anonymous
+        let username = T.pack "Anonymous"
         return $ trace ("pid: " ++ str) $ 
           respondHtml "Comments" $ showPage comments username $ Just pid
 
@@ -61,14 +65,17 @@ commentController = do
 
   --REST.update
 
+{-
 --stolen from LBH
 maybeRegister :: Controller Response -> Controller Response
 maybeRegister ctrl = trace "maybeRegister" $ do
   muName <- getHailsUser
-  musr   <- currentUser
-  if isJust muName && isNothing musr
-    then return $ redirectTo "/users/new"
-    else ctrl
+  trace "here" $ do
+    musr   <- currentUser
+    trace "got user" $ do
+      if isJust muName && isNothing musr
+        then return $ redirectTo "/users/new"
+        else ctrl
 
 withAuthUser :: (User -> Controller Response) -> Controller Response
 withAuthUser act = maybeRegister $ withUserOrDoAuth $ const $  do
@@ -78,8 +85,9 @@ withAuthUser act = maybeRegister $ withUserOrDoAuth $ const $  do
 currentUser :: Controller (Maybe User)
 currentUser = do
   mu <- getHailsUser
-  case mu of
-    Nothing -> trace "user is Nothing" $ return Nothing
-    Just u -> liftLIO $ withLBHPolicy $ do
-      findBy "users" "email" u
-
+  trace "got mu" $ do
+    case mu of
+      Nothing -> trace "user is Nothing" $ return Nothing
+      Just u -> trace "user exists" $ liftLIO $ withLBHPolicy $ trace "user exists" $ do
+        findBy "users" "email" u
+-}

@@ -63,7 +63,8 @@ newComment username postId mparent = trace "newComment" $ do
         Just parent -> trace ("parent: " ++ (show parent)) $ do
           input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
         Nothing -> trace "no parent" $ ""
-    script ! src "/static/js/comments.js" $ ""
+      p $ input ! type_ "submit" ! value "Post comment"
+    trace "running js" $ script ! src "/static/js/comments.js" $ ""
 
 showComment :: Comment -> Maybe UserName -> Html
 showComment comment muser = do
