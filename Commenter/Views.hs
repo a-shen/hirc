@@ -31,26 +31,26 @@ import qualified Text.Blaze.Html.Renderer.String as SR
 import		 LBH.Views
 import		 Commenter.Models
 
-showPage :: [Comment] -> UserName -> Maybe B.ObjectId -> Html
-showPage comments user mpid = trace "showPage " $ do
-  script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  script ! src "http://malsup.github.com/jquery.form.js" $ ""
-  script ! src "/static/js/comments.js" $ ""
-  case mpid of
-    Just pid -> trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
-    Nothing -> trace "pid is Nothing" $ ""
-  indexComments comments $ Just user   -- list all comments
+showPage :: [Comment] -> UserName -> B.ObjectId -> Html
+showPage comments user pid = trace "showPage " $ do
+  --script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
+  --script ! src "http://malsup.github.com/jquery.form.js" $ ""
+  --script ! src "/static/js/comments.js" $ ""
+  trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
+  indexComments comments pid $ Just user   -- list all comments
 
-indexComments :: [Comment] -> Maybe UserName -> Html
-indexComments coms muser = trace ("indexComments; comments: " ++ (show coms)) $ do
+indexComments :: [Comment] -> B.ObjectId -> Maybe UserName -> Html
+indexComments coms pid muser = trace ("indexComments; comments: " ++ (show coms)) $ do
   let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
-  div ! name "commentList" ! id "commentList" $ trace "here" $ do
+  p ! name "commentList" ! id "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
-      case (commentInReplyTo comment) of
-        Nothing -> do
-          li $ showComment comment muser
-          showAllReplies comment comments muser
-        Just reply -> ""
+      if (commentAssocPost comment) == pid
+        then case (commentInReplyTo comment) of
+          Nothing -> do
+            li $ showComment comment muser
+            showAllReplies comment comments muser
+          Just reply -> ""
+        else ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 newComment username postId mparent = trace "newComment" $ 
@@ -58,6 +58,7 @@ newComment username postId mparent = trace "newComment" $
 
 createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
 createComment username postId mparent tag = trace "createComment" $ do
+  --script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   trace ("username: " ++ (T.unpack username)) $ do
     let act = ("/" ++ (show postId) ++ "/comments")
     form ! action (toValue act) ! name "commentForm" ! id "commentForm" ! method "POST" $ do
@@ -92,6 +93,11 @@ showAllReplies comment allComments muser = do
         li $ showComment c muser
         showAllReplies c allComments muser
       else "" -- do nothing
+
+showFrame :: String -> Html
+showFrame pid = do
+  let path = "/" ++ pid ++ "/comments"
+  iframe ! src (toValue path) ! width "800" ! height "700" $ ""
 
 {-
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
