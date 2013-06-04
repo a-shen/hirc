@@ -23,7 +23,7 @@ data Comment = Comment
 
 
 instance DCRecord Comment where
-  fromDocument doc = trace "fromDoc" $ do
+  fromDocument doc = do
     let cid = lookupObjId "_id" doc
     author <- lookup "author" doc
     let post = lookupObjId "post" doc
@@ -35,7 +35,7 @@ instance DCRecord Comment where
                    , commentText = text
                    , commentInReplyTo = parent }
 
-  toDocument c =
+  toDocument c = trace "toDoc" $
     let mparent = commentInReplyTo c
         parent = if isJust mparent
                    then [ "parent" -: fromJust mparent ]

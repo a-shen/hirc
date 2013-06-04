@@ -1,6 +1,4 @@
 
-// <script src="http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js"></script> 
-
 $(document).ready(function() { 
     var options = { 
         target: '#commentList',
@@ -13,7 +11,7 @@ $(document).ready(function() {
     $('#commentForm').submit(function(event) {
         $(this).ajaxSubmit(options);
         alert("ajaxSubmit");
-        event.preventDefault()
+        event.preventDefaults();
         return false;
     });
 });

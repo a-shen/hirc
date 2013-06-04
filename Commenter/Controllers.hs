@@ -43,7 +43,7 @@ commentController :: RESTController
 commentController = do
   REST.index $ maybeRegister $ trace "REST.index" $ index
 
-  REST.create $ withAuthUser $ const $ do --find out what const stands for
+  REST.create $ withAuthUser $ const $ trace "REST.create" $ do
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withCommentPolicy $ insert "comments" ldoc
     index

@@ -40,7 +40,7 @@ showPage comments user pid = trace "showPage " $ do
   indexComments comments pid $ Just user   -- list all comments
 
 indexComments :: [Comment] -> B.ObjectId -> Maybe UserName -> Html
-indexComments coms pid muser = trace ("indexComments; comments: " ++ (show coms)) $ do
+indexComments coms pid muser = do
   let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   p ! name "commentList" ! id "commentList" $ trace "here" $ do
     forM_ comments $ \comment -> do
@@ -57,9 +57,9 @@ newComment username postId mparent = trace "newComment" $
   createComment username postId mparent "Post a comment"
 
 createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
-createComment username postId mparent tag = trace "createComment" $ do
+createComment username postId mparent tag = do
   --script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  trace ("username: " ++ (T.unpack username)) $ do
+  --trace ("username: " ++ (T.unpack username)) $ do
     let act = ("/" ++ (show postId) ++ "/comments")
     form ! action (toValue act) ! name "commentForm" ! id "commentForm" ! method "POST" $ do
       input ! type_ "hidden" ! name "author" ! value (toValue username)
