@@ -33,23 +33,27 @@ import		 Commenter.Models
 
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
-  --script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  --script ! src "http://malsup.github.com/jquery.form.js" $ ""
-  --script ! src "/static/js/comments.js" $ ""
+  script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
+  script ! src "http://malsup.github.com/jquery.form.js" $ ""
+  script ! src "http://github.com/douglascrockford/JSON-js" $ ""
+  --script ! src "/static/js/comments.old.js" $ ""
+  --script ! src "/static/js/comments.mult.js" $ ""
+  --script ! src "/static/js/tmp.js" $ ""
   trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
-  indexComments comments pid $ Just user   -- list all comments
+  indexComments comments pid user
 
-indexComments :: [Comment] -> B.ObjectId -> Maybe UserName -> Html
-indexComments coms pid muser = do
+indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
+indexComments coms pid user = trace "indexComments" $ do
   let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
-  p ! name "commentList" ! id "commentList" $ trace "here" $ do
-    forM_ comments $ \comment -> do
-      if (commentAssocPost comment) == pid
-        then case (commentInReplyTo comment) of
+  ul ! id "root" $ do
+    forM_ comments $ \c -> do
+      if (commentAssocPost c) == pid
+        then case (commentInReplyTo c) of
+        --case (commentInReplyTo c) of
           Nothing -> do
-            li $ showComment comment muser
-            showAllReplies comment comments muser
-          Just reply -> ""
+            div ! id (toValue $ show $ fromJust $ commentId c) $ showComment c user
+            showAllReplies c comments user
+          Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
@@ -58,40 +62,38 @@ newComment username postId mparent = trace "newComment" $
 
 createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
 createComment username postId mparent tag = do
-  --script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  --trace ("username: " ++ (T.unpack username)) $ do
-    let act = ("/" ++ (show postId) ++ "/comments")
-    form ! action (toValue act) ! name "commentForm" ! id "commentForm" ! method "POST" $ do
-      input ! type_ "hidden" ! name "author" ! value (toValue username)
-      input ! type_ "hidden" ! name "post" ! value (toValue $ show postId)
-      div $ do
-        label ! for "text" $ tag -- either "post comment" or "reply"
-        input ! type_ "text" ! name "text" ! id "text"
-      case mparent of
-        Just parent -> do
-          input ! type_ "hidden" ! name "parent" ! value (toValue $ show parent)
-        Nothing -> ""
-      p $ input ! type_ "submit" ! value "Post"
+  let act = ("/" ++ (show postId) ++ "/comments")
+  let pid = toValue $ show postId
+  trace "form" $ form ! action (toValue act) ! id "commentForm" ! method "POST" $ do
+  --trace "form" $ form ! action (toValue act) ! method "POST" $ do
+    input ! type_ "hidden" ! id "author" ! name "author" ! value (toValue username)
+    input ! type_ "hidden" ! id "post" ! name "post" ! value pid
+    div $ do
+      label ! for "text" $ tag -- either "post comment" or "reply"
+      input ! type_ "text" ! id "text" ! name "text" ! id "text"
+    case mparent of
+      Just parent ->
+        input ! type_ "hidden" ! name "parent" ! id "parent" ! value (toValue $ show parent)
+      Nothing ->
+        input ! type_ "hidden" ! name "parent" ! id "parent" ! value ""
+    p $ input ! type_ "submit" ! class_ "submit" ! id "submit" ! value "Post"
 
-showComment :: Comment -> Maybe UserName -> Html
-showComment comment muser = do
+showComment :: Comment -> UserName -> Html
+showComment comment user = do
   h3 $ toHtml $ commentAuthor comment
   p $ toHtml $ show $ B.timestamp $ fromJust $ commentId comment
   p $ toHtml $ commentText comment
-  case muser of
-    Just user -> do
-      createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment"
-    Nothing -> ""
+  createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment"
 
-showAllReplies :: Comment -> [Comment] -> Maybe UserName -> Html
-showAllReplies comment allComments muser = do
-  let id = commentId comment
+showAllReplies :: Comment -> [Comment] -> UserName -> Html
+showAllReplies comment allComments user = do
+  let cid = commentId comment
   --let comments = sortBy (comparing commentAssocPost) coms
   forM_ allComments $ \c -> do
-    if ((commentInReplyTo c) == id)
+    if ((commentInReplyTo c) == cid)
       then do
-        li $ showComment c muser
-        showAllReplies c allComments muser
+        ul $ div ! id (toValue $ show $ fromJust cid) $ showComment c user
+        showAllReplies c allComments user
       else "" -- do nothing
 
 showFrame :: String -> Html

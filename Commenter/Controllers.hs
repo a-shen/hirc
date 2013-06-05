@@ -44,17 +44,42 @@ commentController = do
   REST.index $ maybeRegister $ trace "REST.index" $ index
 
   REST.create $ withAuthUser $ const $ trace "REST.create" $ do
+    let ctype = "text/json"
+        respJSON403 msg = Response status403 [(hContentType, ctype)] $
+                           L8.pack $ "{ \"error\" : " ++
+                                       show (msg :: String) ++ "}"
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withCommentPolicy $ insert "comments" ldoc
     index
+    --sid <- queryParam "pid"
+    --let str = S8.unpack $ fromJust sid  -- post id as a string
+    --return $ trace "redirecting" $ redirectTo ("/" ++ str ++ "/comments")
 
-index = do
+index = trace "index called" $ do
   mu <- currentUser
   sid <- queryParam "pid"
   let str = S8.unpack $ fromJust sid  -- post id as a string
   let pid = read str -- post id as an ObjectId
-  comments <- liftLIO . withCommentPolicy $ trace ("pid: " ++ (show pid)) $
+  comments <- liftLIO . withCommentPolicy $ 
     findAll $ select ["post" -: pid] "comments"
+  let username = case mu of
+                   Just u -> userId u
+                   Nothing -> "Anonymous"
+  matype <- requestHeader "accept"
+  case matype of
+    Just atype |  "application/json" `S8.isInfixOf` atype ->
+       return $ trace ("encoding to json; comments: " ++ (show comments)) $ ok "application/json" (encode $ toJSON comments)
+    _ -> return $ trace "accepting html" $ respondHtml mu $ showPage comments username pid
+
+{-
+  return $ trace ("pid: " ++ str) $
+    case withNew of
+      Just _ -> trace "calling newComment" $ respondHtml mu $ showPage comments username pid
+      Nothing -> trace "Nothing; still calling newComment" $ respondHtml mu $ showPage comments username pid
+      --Nothing -> trace "not calling newComment" $ respondHtml mu $ indexComments comments pid username 
+-}
+
+{-
   case mu of
     Just u -> do
       let username = userId $ fromJust mu
@@ -64,6 +89,7 @@ index = do
       let username = T.pack "Anonymous"
       return $ trace ("pid: " ++ str) $ 
         respondHtml mu $ showPage comments username pid
+-}
 
 testController :: Controller Response
 testController = do
@@ -71,5 +97,4 @@ testController = do
   sid <- queryParam "pid"
   let str = S8.unpack $ fromJust sid  -- post id as a string
   return $ respondHtml mu $ showFrame str
-
 

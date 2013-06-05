@@ -1,4 +1,5 @@
-{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE OverloadedStrings
+           , DeriveGeneric  #-}
 module Commenter.Models ( Comment(..) ) where
 
 import           Prelude hiding (lookup)
@@ -12,6 +13,8 @@ import           Hails.Database
 import           Hails.Database.Structured
 import		 LBH.MP
 import		 Debug.Trace
+import		 Data.Aeson
+import           GHC.Generics
 
 data Comment = Comment
     { commentId        :: Maybe ObjectId
@@ -20,7 +23,18 @@ data Comment = Comment
     , commentText :: String
     , commentInReplyTo :: Maybe ObjectId  -- comment it's in reply to
     } deriving Show
+    --} deriving (Show, Generic)
 
+instance ToJSON Comment where --parent is probably not going to work
+  toJSON (Comment i a p t mr) = 
+    object [ "_id"    .= (show $ fromJust i)
+           , "author" .= a
+           , "post"   .= (show p)
+           , "text"   .= t
+           , "parent" .= case mr of
+                           Just r -> show r
+                           _ -> ""
+           ]
 
 instance DCRecord Comment where
   fromDocument doc = do
