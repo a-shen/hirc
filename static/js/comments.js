@@ -43,6 +43,7 @@ $(document).ready(function() {
   }
 });
 
+/*
 $(document).ready(function() {
   console.log("welcome");
   $(".csubmit").click(function(event) {
@@ -88,7 +89,6 @@ $(document).ready(function() {
   });
 });
 
-/*
 $(document).ready(function() {
   console.log("welcome");
     $(".csubmit").click(function() {
