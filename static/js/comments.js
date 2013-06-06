@@ -2,12 +2,59 @@
 
 $(document).ready(function() {
   console.log("welcome");
-  $(".csubmit").click(function() {
+  var n = $("form").length;
+  alert("n = " + n);
+  for (var i = 0; i < n; i++) {
+    alert("looping; i = " + i);
+    $("form").eq(i).submit(function(event) {
+      alert("submit was clicked; i = " + i);
+      event.preventDefault();
+      var pid = document.createTextNode($("form").eq(i).find("post"));
+      var text = document.createTextNode($("form").eq(i).find("text"));
+      var par = document.createTextNode($("form").eq(i).find("par"));
+      console.log("stringified text: " + text);
+      var dataString = $("form").eq(i).serialize();
+      if ((text != '') && (text != null)) {
+        console.log("submitting datastring: " + dataString);
+        $.ajax({
+          dataType: "json",
+          type: "POST",
+          url: "",
+          data: dataString,
+          success: function(data) {
+            console.log("successfully submitted form");
+            console.log("return value: " + data);
+            console.log("type: " + (typeof data));
+            var form = "<form action=\"\" method=\"POST\"> <input type=\"hidden\" id=\"author\" name=\"author\" value=" + author + "> <input type=\"hidden\" id=\"post\" name=\"post\" value=" + pid + "> <div> Post a reply <br> <input type=\"text\" id=\"text\" name=\"text\"></div> <input type=\"hidden\" id=\"parent\" value=" + par + "> <p><input type=\"submit\" class=\"csubmit\" id=\"submit\" value=\"Post\"</p>"
+            var html = "<ul><h3>" + author + "</h3>" + text;
+            if (par == "") {
+              console.log("no parent");
+              $("#root").prepend(html + form);
+            } else {
+              console.log("parent: " + par);
+              $("#"+par).append(html + form);
+            }
+            return data;
+          },
+        });
+      return false;
+     }
+   });
+  }
+});
+
+$(document).ready(function() {
+  console.log("welcome");
+  $(".csubmit").click(function(event) {
+    event.preventDefault();
     console.log("submit was clicked");
     var dataString = $("#commentForm").serialize();
-    var pid = $("#post").val();
-    var text = $("#text").val();
-    var par = $("#parent").val();
+    var pid = document.createTextNode($("form").eq(i).find("post"));
+    var text = document.createTextNode($("form").eq(i).find("text"));
+    var par = document.createTextNode($("form").eq(i).find("par"));
+    //var pid = $("#post").val();
+    //var text = $("#text").val();
+    //var par = $("#parent").val();
     console.log("text: " + text);
     if ((text != '') && (text != null)) {
       console.log("submitting datastring: " + dataString);

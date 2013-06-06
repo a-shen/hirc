@@ -37,7 +37,7 @@ showPage comments user pid = trace "showPage " $ do
   --script ! src "http://malsup.github.com/jquery.form.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   script ! src "http://github.com/douglascrockford/JSON-js" $ ""
-  script ! src "/static/js/comments.js" $ ""
+  --script ! src "/static/js/comments.js" $ ""
   --script ! src "/static/js/comments.old.js" $ ""
   --script ! src "/static/js/comments.mult.js" $ ""
   --script ! src "/static/js/tmp.js" $ ""
@@ -68,8 +68,8 @@ createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Attribute
 createComment username postId mparent tag formId = do
   let act = ("/" ++ (show postId) ++ "/comments")
   let pid = toValue $ show postId
-  trace "form" $ form ! action (toValue act) ! id formId ! method "POST" $ do
-  --trace "form" $ form ! action (toValue act) ! method "POST" $ do
+  --trace "form" $ form ! action (toValue act) ! id formId ! method "POST" $ do
+  trace "form" $ form ! action (toValue act) ! method "POST" $ do
     input ! type_ "hidden" ! id "author" ! name "author" ! value (toValue username)
     input ! type_ "hidden" ! id "post" ! name "post" ! value pid
     div $ do
