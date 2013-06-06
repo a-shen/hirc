@@ -34,8 +34,10 @@ import		 Commenter.Models
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  script ! src "http://malsup.github.com/jquery.form.js" $ ""
+  --script ! src "http://malsup.github.com/jquery.form.js" $ ""
+  script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   script ! src "http://github.com/douglascrockford/JSON-js" $ ""
+  script ! src "/static/js/comments.js" $ ""
   --script ! src "/static/js/comments.old.js" $ ""
   --script ! src "/static/js/comments.mult.js" $ ""
   --script ! src "/static/js/tmp.js" $ ""
@@ -51,20 +53,22 @@ indexComments coms pid user = trace "indexComments" $ do
         then case (commentInReplyTo c) of
         --case (commentInReplyTo c) of
           Nothing -> do
-            div ! id (toValue $ show $ fromJust $ commentId c) $ showComment c user
+            showComment c user
             showAllReplies c comments user
           Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 newComment username postId mparent = trace "newComment" $ 
-  createComment username postId mparent "Post a comment"
+  createComment username postId mparent "Post a comment" "commentForm"
 
-createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
-createComment username postId mparent tag = do
+createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> AttributeValue -> Html
+--createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
+--createComment username postId mparent tag = do
+createComment username postId mparent tag formId = do
   let act = ("/" ++ (show postId) ++ "/comments")
   let pid = toValue $ show postId
-  trace "form" $ form ! action (toValue act) ! id "commentForm" ! method "POST" $ do
+  trace "form" $ form ! action (toValue act) ! id formId ! method "POST" $ do
   --trace "form" $ form ! action (toValue act) ! method "POST" $ do
     input ! type_ "hidden" ! id "author" ! name "author" ! value (toValue username)
     input ! type_ "hidden" ! id "post" ! name "post" ! value pid
@@ -76,14 +80,15 @@ createComment username postId mparent tag = do
         input ! type_ "hidden" ! name "parent" ! id "parent" ! value (toValue $ show parent)
       Nothing ->
         input ! type_ "hidden" ! name "parent" ! id "parent" ! value ""
-    p $ input ! type_ "submit" ! class_ "submit" ! id "submit" ! value "Post"
+    p $ input ! type_ "submit" ! class_ "csubmit" ! id "submit" ! value "Post"
 
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
-  h3 $ toHtml $ commentAuthor comment
-  p $ toHtml $ show $ B.timestamp $ fromJust $ commentId comment
-  p $ toHtml $ commentText comment
-  createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment"
+  div ! id (toValue $ show $ fromJust $ commentId comment) $ do
+    h3 $ toHtml $ commentAuthor comment
+    p $ toHtml $ show $ B.timestamp $ fromJust $ commentId comment
+    p $ toHtml $ commentText comment
+  createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment" "commentForm"
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do
@@ -92,7 +97,7 @@ showAllReplies comment allComments user = do
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
       then do
-        ul $ div ! id (toValue $ show $ fromJust cid) $ showComment c user
+        ul $ showComment c user
         showAllReplies c allComments user
       else "" -- do nothing
 
