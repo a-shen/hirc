@@ -1,63 +1,12 @@
-
-
+ 
 $(document).ready(function() {
-  console.log("welcome");
-  var n = $("form").length;
-  alert("n = " + n);
-  for (var i = 0; i < n; i++) {
-    alert("looping; i = " + i);
-    $("form").eq(i).submit(function(event) {
-      alert("submit was clicked; i = " + i);
-      event.preventDefault();
-      var pid = document.createTextNode($("form").eq(i).find("post"));
-      var text = document.createTextNode($("form").eq(i).find("text"));
-      var par = document.createTextNode($("form").eq(i).find("par"));
-      console.log("stringified text: " + text);
-      var dataString = $("form").eq(i).serialize();
-      if ((text != '') && (text != null)) {
-        console.log("submitting datastring: " + dataString);
-        $.ajax({
-          dataType: "json",
-          type: "POST",
-          url: "",
-          data: dataString,
-          success: function(data) {
-            console.log("successfully submitted form");
-            console.log("return value: " + data);
-            console.log("type: " + (typeof data));
-            var form = "<form action=\"\" method=\"POST\"> <input type=\"hidden\" id=\"author\" name=\"author\" value=" + author + "> <input type=\"hidden\" id=\"post\" name=\"post\" value=" + pid + "> <div> Post a reply <br> <input type=\"text\" id=\"text\" name=\"text\"></div> <input type=\"hidden\" id=\"parent\" value=" + par + "> <p><input type=\"submit\" class=\"csubmit\" id=\"submit\" value=\"Post\"</p>"
-            var html = "<ul><h3>" + author + "</h3>" + text;
-            if (par == "") {
-              console.log("no parent");
-              $("#root").prepend(html + form);
-            } else {
-              console.log("parent: " + par);
-              $("#"+par).append(html + form);
-            }
-            return data;
-          },
-        });
-      return false;
-     }
-   });
-  }
-});
-
-/*
-$(document).ready(function() {
-  console.log("welcome");
-  $(".csubmit").click(function(event) {
-    event.preventDefault();
+  $("#commentForm").submit(function() { // making new comment
     console.log("submit was clicked");
     var dataString = $("#commentForm").serialize();
-    var pid = document.createTextNode($("form").eq(i).find("post"));
-    var text = document.createTextNode($("form").eq(i).find("text"));
-    var par = document.createTextNode($("form").eq(i).find("par"));
-    //var pid = $("#post").val();
-    //var text = $("#text").val();
-    //var par = $("#parent").val();
+    var pid = $("#post").val();
+    var text = $("#text").val();
     console.log("text: " + text);
-    if ((text != '') && (text != null)) {
+    if ((text != '') && (text != null) && (text != "undefined")) {
       console.log("submitting datastring: " + dataString);
       $.ajax({
         dataType: "json",
@@ -69,116 +18,100 @@ $(document).ready(function() {
           console.log("return value: " + data);
           console.log("type: " + (typeof data));
           var array = data;
-          console.log("length: " + (array.length));
+          console.log("data: " + (array.join()));
           var c1 = array[array.length - 1];
           console.log("c1 text: " + c1.text + "; text: " + text);
-          var form = "<form action=\"\" id=\"commentForm\" method=\"POST\"> <input type=\"hidden\" id=\"author\" name=\"author\" value=" + author + "> <input type=\"hidden\" id=\"post\" name=\"post\" value=" + pid + "> <div> Post a reply <br> <input type=\"text\" id=\"text\" name=\"text\"></div> <input type=\"hidden\" id=\"parent\" value=" + par + "> <p><input type=\"submit\" class=\"csubmit\" id=\"submit\" value=\"Post\"</p>"
-          var html = "<ul><h3>" + c1.author + "</h3>" + c1.text;
-          if (par == "") {
-            console.log("no parent");
-            $("#root").prepend(html + form);
-          } else {
-            console.log("parent: " + par);
-            $("#"+par).append(html + form);
-          }
+          var cid = c1._id;
+          console.log("id: " + cid);
+          var html = // comment with reply button
+          $('<div class="comment" id=' + cid + '>' +
+            '<blockquote>' + text + '</blockquote>' +
+            '<button class="reply-button">Reply</button>' + 
+            '</div>').appendTo("#root");
+          console.log("no parent");
+          $("#root").prepend(html);
+          console.log("added comment and button");
           return data;
         },
       });
     }
     return false;
   });
-});
-
-$(document).ready(function() {
-  console.log("welcome");
-    $(".csubmit").click(function() {
-      var element = $(this);
-      //var id = element.attr("id");
-      //console.log("id: " + id);
-
-      alert("submit was clicked");
-      //var dataString = $("#commentForm").serialize();
-      var pid = $("#post").val();
-      var text = $("#text").val();
-      var par = $("#parent").val();
-      var author = $("#author").val();
-      alert("text: " + text);
-      var dataString = "author=" + author + "&post=" + pid + "&text=" + text + "&parent=" + par;
-      //var dataString = $(".csubmit").serialize();
-      console.log("data: " + dataString);
-      if ((text != '') && (text != null) && (text != "undefined")) {
-        console.log("submitting datastring: " + dataString);
-        $.ajax({
-          dataType: "json",
-          type: "POST",
-          url: "",
-          data: dataString,
-          success: function(data) {
-            console.log("successfully submitted form");
-            console.log("return value: " + data);
-            console.log("type: " + (typeof data));
-            var array = data;
-            console.log("length: " + (array.length));
-            var c1 = array[array.length - 1];
-            console.log("c1 text: " + c1.text + "; text: " + text);
-            var form = "<form action=\"\" id=\"replyForm\" method=\"POST\"> <input type=\"hidden\" id=\"author\" name=\"author\" value=" + author + "> <input type=\"hidden\" id=\"post\" name=\"post\" value=" + pid + "> <div> Post a reply <br> <input type=\"text\" id=\"text\" name=\"text\"></div> <input type=\"hidden\" id=\"parent\" value=" + par + "> <p><input type=\"submit\" class=\"csubmit\" id=\"submit\" value=\"Post\"</p>"
-            var html = "<ul><h3>" + author + "</h3>" + text;
-            if (par == "") {
-              console.log("no parent");
-              $("#root").prepend(html + form);
-            } else {
-              console.log("parent: " + par);
-              $("#"+par).append(html + form);
-            }
-            return data;
-          },
-        });
-      }
-      return false;
-    });
-});
-
-$(document).ready(function() {
-  console.log("welcome");
-  //for (b in $(".submit")) {
-    //$(b).click(function() {
-    $("#commentForm").submit(function() {
-      console.log("submit was clicked");
-      var dataString = $("#commentForm").serialize();
-      var pid = $("#post").val();
-      var text = $("#text").val();
-      var par = $("#parent").val();
-      console.log("text: " + text);
-      if ((text != '') && (text != null) && (text != "undefined")) {
-        console.log("submitting datastring: " + dataString);
-        $.ajax({
-          dataType: "json",
-          type: "POST",
-          url: "",
-          data: dataString,
-          success: function(data) {
-            console.log("successfully submitted form");
-            console.log("return value: " + data);
-            console.log("type: " + (typeof data));
-            var array = data;
-            console.log("length: " + (array.length));
-            var c1 = array[array.length - 1];
-            console.log("c1 text: " + c1.text + "; text: " + text);
-            var form = "<form action=\"\" id=\"commentForm\" method=\"POST\"> <input type=\"hidden\" id=\"author\" name=\"author\" value=" + author + "> <input type=\"hidden\" id=\"post\" name=\"post\" value=" + pid + "> <div> Post a reply <br> <input type=\"text\" id=\"text\" name=\"text\"></div> <input type=\"hidden\" id=\"parent\" value=" + par + "> <p><input type=\"submit\" class=\"submit\" id=\"submit\" value=\"Post\"</p>"
-            var html = "<ul><h3>" + c1.author + "</h3>" + c1.text;
-            if (par == "") {
-              console.log("no parent");
-              $("#root").prepend(html + form);
-            } else {
-              console.log("parent: " + par);
-              $("#"+par).append(html + form);
-            }
-            return data;
-          },
-        });
-      }
-      return false;
+  $(".reply-button").click(function() {
+    console.log("reply button clicked");
+    var parent = $(this).parent()[0]; // returns a div
+    var id = parent.id; // in reply to
+    //var post = parent.attr("post"); // the post it belongs to
+    var post = $("#commentForm").attr("post"); // TODO this will prob fail
+    console.log("post: " + post);
+    var author = "Anon" // TODO
+    var reply_button = $(this);
+    reply_button.hide();
+    var form = 
+    $('<form action="#">'+
+      '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
+      //'<input type="hidden" name="post" value=\"' + post + '\"/>'+
+      '<input type="hidden" name="author" value=\"' + author + '\"/>'+
+      '<input type="text" name="text" placeholder="Comment..."/>'+
+      '<input type="submit" value="Reply2"/>'+
+      '</form>').appendTo(parent);
+    form.submit(function(event) {
+      event.preventDefault();
+      var dataString = form.serialize();
+      alert("sending request : " + dataString);
+      $.ajax({
+        dataType: "json",
+        type: "POST",
+        url: "",
+        data: dataString,
+        success: function(data) {
+          form.attr("text").appendTo(parent);
+          alert("reply form submitted.");
+          reply_button.show();
+          $(this).remove();
+          return false;
+        }
+      })
     });
   });
-*/
+});
 
+/*
+  var nform =  // form for new comment
+  $('<form action="#">'+
+    '<input type="hidden" name="parent" value=\"root\"/>'+
+    //'<input type="hidden" name="post" value=\"' + post + '\"/>'+
+    //'<input type="hidden" name="author" value=\"' + author + '\"/>'+
+    '<input type="text" name="text" placeholder="Comment..."/>'+
+    '<input type="submit" value="Comment"/>'+
+    '</form>').appendTo("#root");
+
+  nform.appendTo("#root");
+  console.log("here");
+
+  nform.submit(function(event) {
+    event.preventDefault();
+    var dataString = nform.serialize();
+    alert("sending request : " + dataString);
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: "",
+      data: dataString,
+      success: function(data) {
+        //var commentText = nform.attr("text");
+        var cid = "12345" // TODO
+        var commentText = $('input:text[name="text"]', nform);
+        alert("reply form submitted; text: " + commentText);
+        var html = // comment with reply button
+          '<div class="comment" id=' + cid + '>' +
+          '<blockquote>' + commentText + '</blockquote>' +
+          '<button class="reply-button">Reply</button> </div>'
+        alert("comment form submitted; text: " + text);
+        html.appendTo("#root");
+        alert("appended new comment");
+        return false;
+      }
+    })
+  });
+*/

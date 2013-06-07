@@ -34,13 +34,8 @@ import		 Commenter.Models
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
-  --script ! src "http://malsup.github.com/jquery.form.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  script ! src "http://github.com/douglascrockford/JSON-js" $ ""
-  --script ! src "/static/js/comments.js" $ ""
-  --script ! src "/static/js/comments.old.js" $ ""
-  --script ! src "/static/js/comments.mult.js" $ ""
-  --script ! src "/static/js/tmp.js" $ ""
+  --script ! src "http://github.com/douglascrockford/JSON-js" $ ""
   trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
   indexComments comments pid user
 
@@ -51,7 +46,6 @@ indexComments coms pid user = trace "indexComments" $ do
     forM_ comments $ \c -> do
       if (commentAssocPost c) == pid
         then case (commentInReplyTo c) of
-        --case (commentInReplyTo c) of
           Nothing -> do
             showComment c user
             showAllReplies c comments user
@@ -59,41 +53,32 @@ indexComments coms pid user = trace "indexComments" $ do
         else ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
-newComment username postId mparent = trace "newComment" $ 
-  createComment username postId mparent "Post a comment" "commentForm"
-
-createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> AttributeValue -> Html
---createComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html -> Html
---createComment username postId mparent tag = do
-createComment username postId mparent tag formId = do
+newComment username postId mparent = trace "newComment" $ do
   let act = ("/" ++ (show postId) ++ "/comments")
   let pid = toValue $ show postId
-  --trace "form" $ form ! action (toValue act) ! id formId ! method "POST" $ do
-  trace "form" $ form ! action (toValue act) ! method "POST" $ do
-    input ! type_ "hidden" ! id "author" ! name "author" ! value (toValue username)
-    input ! type_ "hidden" ! id "post" ! name "post" ! value pid
+  trace "form" $ form ! id "commentForm" ! action (toValue act) ! method "POST" $ do
+    input ! type_ "hidden" ! name "author" ! id "author" ! value (toValue username)
+    input ! type_ "hidden" ! name "post" ! id "post" ! value pid
+    input ! type_ "hidden" ! name "parent" ! value ""
     div $ do
-      label ! for "text" $ tag -- either "post comment" or "reply"
-      input ! type_ "text" ! id "text" ! name "text" ! id "text"
-    case mparent of
-      Just parent ->
-        input ! type_ "hidden" ! name "parent" ! id "parent" ! value (toValue $ show parent)
-      Nothing ->
-        input ! type_ "hidden" ! name "parent" ! id "parent" ! value ""
-    p $ input ! type_ "submit" ! class_ "csubmit" ! id "submit" ! value "Post"
+      label ! for "text" $ "Post a comment"
+      input ! type_ "text" ! name "text" ! id "text"
+    p $ input ! type_ "submit" ! value "Post"
 
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
-  div ! id (toValue $ show $ fromJust $ commentId comment) $ do
+  let cid = commentId comment
+  let divid = toValue $ show $ fromJust cid
+  div ! class_ "comment" ! id divid $ do
     h3 $ toHtml $ commentAuthor comment
-    p $ toHtml $ show $ B.timestamp $ fromJust $ commentId comment
-    p $ toHtml $ commentText comment
-  createComment user (commentAssocPost comment) (commentId comment) "Reply to this comment" "commentForm"
+    p $ toHtml $ show $ B.timestamp $ fromJust cid
+    blockquote $ toHtml $ commentText comment
+  button ! class_ "reply-button" $ "Reply"
+  --replyComment user (commentAssocPost comment) (commentId comment)
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do
   let cid = commentId comment
-  --let comments = sortBy (comparing commentAssocPost) coms
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
       then do
@@ -105,6 +90,21 @@ showFrame :: String -> Html
 showFrame pid = do
   let path = "/" ++ pid ++ "/comments"
   iframe ! src (toValue path) ! width "800" ! height "700" $ ""
+
+{-
+replyComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
+replyComment username postId mparent = do
+  --let act = ("/" ++ (show postId) ++ "/comments")
+  let pid = toValue $ show postId
+  trace "form" $ form ! action "#" ! method "POST" $ do
+    input ! type_ "hidden" ! name "author" ! value (toValue username)
+    input ! type_ "hidden" ! name "post" ! value pid
+    input ! type_ "hidden" ! name "parent" ! value ""
+    div $ do
+      input ! type_ "text" ! name "text" ! placeholder "Comment..."
+    p $ input ! type_ "submit" ! value "Post"
+  button ! class_ "reply-button" $ "Reply"
+-}
 
 {-
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
