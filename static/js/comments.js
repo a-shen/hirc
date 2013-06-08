@@ -42,7 +42,8 @@ $(document).ready(function() {
     var parent = $(this).parent()[0]; // returns a div
     var id = parent.id; // in reply to
     //var post = parent.attr("post"); // the post it belongs to
-    var post = $("#commentForm").attr("post"); // TODO this will prob fail
+    //var post = $("#commentForm").attr("post"); // TODO this will prob fail
+    var post = '516dc8b413c61405cb000000';
     console.log("post: " + post);
     var author = "Anon" // TODO
     var reply_button = $(this);
@@ -72,46 +73,8 @@ $(document).ready(function() {
           return false;
         }
       })
+      return false;
     });
   });
 });
 
-/*
-  var nform =  // form for new comment
-  $('<form action="#">'+
-    '<input type="hidden" name="parent" value=\"root\"/>'+
-    //'<input type="hidden" name="post" value=\"' + post + '\"/>'+
-    //'<input type="hidden" name="author" value=\"' + author + '\"/>'+
-    '<input type="text" name="text" placeholder="Comment..."/>'+
-    '<input type="submit" value="Comment"/>'+
-    '</form>').appendTo("#root");
-
-  nform.appendTo("#root");
-  console.log("here");
-
-  nform.submit(function(event) {
-    event.preventDefault();
-    var dataString = nform.serialize();
-    alert("sending request : " + dataString);
-    $.ajax({
-      dataType: "json",
-      type: "POST",
-      url: "",
-      data: dataString,
-      success: function(data) {
-        //var commentText = nform.attr("text");
-        var cid = "12345" // TODO
-        var commentText = $('input:text[name="text"]', nform);
-        alert("reply form submitted; text: " + commentText);
-        var html = // comment with reply button
-          '<div class="comment" id=' + cid + '>' +
-          '<blockquote>' + commentText + '</blockquote>' +
-          '<button class="reply-button">Reply</button> </div>'
-        alert("comment form submitted; text: " + text);
-        html.appendTo("#root");
-        alert("appended new comment");
-        return false;
-      }
-    })
-  });
-*/
