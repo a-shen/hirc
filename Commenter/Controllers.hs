@@ -43,7 +43,7 @@ commentController :: RESTController
 commentController = do
   REST.index $ maybeRegister $ trace "REST.index" $ index
 
-  REST.create $ withAuthUser $ const $ trace "REST.create" $ do
+  REST.create $ trace "REST.create" $ withAuthUser $ const $ trace "REST.create again" $ do
     let ctype = "text/json"
         respJSON403 msg = Response status403 [(hContentType, ctype)] $
                            L8.pack $ "{ \"error\" : " ++
