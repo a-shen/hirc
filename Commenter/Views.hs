@@ -41,7 +41,7 @@ showPage comments user pid = trace "showPage " $ do
 
 indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
 indexComments coms pid user = trace "indexComments" $ do
-  let comments = reverse $ sortBy (comparing (B.timestamp . fromJust . commentId)) coms
+  let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   ul ! id "root" $ do
     forM_ comments $ \c -> do
       if (commentAssocPost c) == pid
