@@ -1,3 +1,4 @@
+
 {-# LANGUAGE OverloadedStrings
            , DeriveGeneric  #-}
 module Commenter.Models ( Comment(..) ) where

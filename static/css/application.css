@@ -17,7 +17,24 @@ body {
   font-family: "Roboto", sans-serif;
 }
 
-h1, h2, h3, h4 {
+h3 {
+line-height:60%;
+font-family:"Arial";
+font-size:18px;
+}
+
+p {
+line-height:120%;
+font-family:"Arial";
+font-size:14px;
+}
+
+blockquote {
+font-family:"Arial";
+font-size:14px;
+}
+
+h1, h2, h4 {
   font-family: "Gilda Display", serif;
 }
 

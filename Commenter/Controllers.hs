@@ -51,9 +51,6 @@ commentController = do
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withCommentPolicy $ insert "comments" ldoc
     index
-    --sid <- queryParam "pid"
-    --let str = S8.unpack $ fromJust sid  -- post id as a string
-    --return $ trace "redirecting" $ redirectTo ("/" ++ str ++ "/comments")
 
 index = trace "index called" $ do
   mu <- currentUser

@@ -33,10 +33,12 @@ function display_comment(c1, destination) { // append comment and a reply button
   console.log("dest: " + destination);
   var cid = c1._id;
   console.log("id: " + cid);
+  var timestamp = cid.toString().substring(0,8);
+  date = new Date( parseInt( timestamp, 16 ) * 1000 );
   var html = // comment with reply button
   $('<div class="comment" id=' + cid + '>' +
     '<h3>' + c1.author + '</h3>' +
-    '<p>' + "Jun 9, 2013 at 9:03 PM" + '</p>' + // TODO
+    '<p>' + date + '</p>' +
     '<blockquote>' + c1.text + '</blockquote>' +
     '<button class="reply-button">Reply</button>' +
     '</div>').appendTo(destination);
@@ -44,6 +46,7 @@ function display_comment(c1, destination) { // append comment and a reply button
   $(destination).append(html);
   console.log("added comment and button");
   $(".reply-button").click(function() {
+    $(this).hide();
     var parent = $(this).parent()[0]; // returns a div
     handle_reply(parent);
   });
