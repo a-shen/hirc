@@ -73,7 +73,7 @@ showComment comment user = do
     h3 $ toHtml $ commentAuthor comment
     p $ toHtml $ show $ B.timestamp $ fromJust cid
     blockquote $ toHtml $ commentText comment
-  button ! class_ "reply-button" $ "Reply"
+    button ! class_ "reply-button" $ "Reply"
   --replyComment user (commentAssocPost comment) (commentId comment)
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
