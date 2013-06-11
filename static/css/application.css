@@ -17,22 +17,54 @@ body {
   font-family: "Roboto", sans-serif;
 }
 
+ul {
+margin-left: 40px;
+}
+
+/*
+ul>ul {
+margin-left: 0px;
+}
+*/
+
+div {
+line-height:100%;
+}
+
 h3 {
-line-height:60%;
-font-family:"Arial";
+line-height:80%;
+font-family: "Roboto", sans-serif;
 font-size:18px;
+}
+
+li {
+display:none;
 }
 
 p {
 line-height:120%;
-font-family:"Arial";
+font-family: "Roboto", sans-serif;
 font-size:14px;
 }
 
 blockquote {
-font-family:"Arial";
+font-family: "Roboto", sans-serif;
 font-size:14px;
 }
+
+.reply {
+font-family: "Roboto", sans-serif;
+font-size:14px;
+margin-left: 40px;
+}
+
+/*
+.reply>.reply {
+font-family: "Roboto", sans-serif;
+font-size:14px;
+margin-left: 0px;
+}
+*/
 
 h1, h2, h4 {
   font-family: "Gilda Display", serif;

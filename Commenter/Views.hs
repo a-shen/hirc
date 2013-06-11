@@ -1,3 +1,4 @@
+
 {-# LANGUAGE OverloadedStrings #-}
 
 module Commenter.Views where
@@ -33,6 +34,7 @@ import		 Commenter.Models
 
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
+  p ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   --script ! src "http://github.com/douglascrockford/JSON-js" $ ""
@@ -49,6 +51,9 @@ indexComments coms pid user = trace "indexComments" $ do
           Nothing -> do
             showComment c user
             showAllReplies c comments user
+            let divid = toValue $ show $ fromJust $ commentId c
+            div ! class_ "comment" ! id divid $ do
+              button ! class_ "reply-button" $ "Reply"
           Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
@@ -62,19 +67,19 @@ newComment username postId mparent = trace "newComment" $ do
     input ! type_ "hidden" ! name "parent" ! value ""
     div $ do
       label ! for "text" $ "Post a comment"
-      input ! type_ "text" ! name "text" ! id "text"
+      textarea ! type_ "text" ! name "text" ! id "text" $ ""
     p $ input ! type_ "submit" ! value "Post"
 
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
   let cid = commentId comment
   let divid = toValue $ show $ fromJust cid
+  let ltime = utcToLocalTime (utc) $ B.timestamp $ fromJust cid
   div ! class_ "comment" ! id divid $ do
     h3 $ toHtml $ commentAuthor comment
-    p $ toHtml $ show $ B.timestamp $ fromJust cid
+    p $ toHtml $ show $ ltime
     blockquote $ toHtml $ commentText comment
-    button ! class_ "reply-button" $ "Reply"
-  --replyComment user (commentAssocPost comment) (commentId comment)
+    --button ! class_ "reply-button" $ "Reply"
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do
@@ -90,32 +95,4 @@ showFrame :: String -> Html
 showFrame pid = do
   let path = "/" ++ pid ++ "/comments"
   iframe ! src (toValue path) ! width "800" ! height "700" $ ""
-
-{-
-replyComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
-replyComment username postId mparent = do
-  --let act = ("/" ++ (show postId) ++ "/comments")
-  let pid = toValue $ show postId
-  trace "form" $ form ! action "#" ! method "POST" $ do
-    input ! type_ "hidden" ! name "author" ! value (toValue username)
-    input ! type_ "hidden" ! name "post" ! value pid
-    input ! type_ "hidden" ! name "parent" ! value ""
-    div $ do
-      input ! type_ "text" ! name "text" ! placeholder "Comment..."
-    p $ input ! type_ "submit" ! value "Post"
-  button ! class_ "reply-button" $ "Reply"
--}
-
-{-
-respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
-  head $ do 
-    title ctitle
-    stylesheet "/static/css/bootstrap.css"
-    stylesheet "/static/css/application.css"
-    script ! src "https://login.persona.org/include.js" $ ""
-  body $ do
-    script ! src "/static/js/jquery.js" $ ""
-    script ! src "/static/js/bootstrap.js" $ ""
-    content
--}
 
