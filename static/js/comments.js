@@ -40,7 +40,7 @@ function display_comment(c1, destination) { // append comment and a reply button
   var cid = c1._id;
   //console.log("id: " + cid);
   var timestamp = cid.toString().substring(0,8);
-  date = new Date( parseInt( timestamp, 16 ) * 1000 );
+  var date = formatDate(new Date( parseInt( timestamp, 16 ) * 1000 ));
   var head = '';
   var end = '</div>';
   if ((destination != "#root") && ($(destination).parent() == "#root")) { // if it's a reply, indent it
@@ -54,8 +54,8 @@ function display_comment(c1, destination) { // append comment and a reply button
   $(head +
     '<h3>' + c1.author + '</h3>' +
     '<p>' + date + '</p>' +
-    '<blockquote>' + c1.text + '</blockquote>' +
-    '<button class="reply-button2">Reply</button>' +
+    '<blockquote>' + c1.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
+    '<button class="reply-button2">Reply</button><br>' +
     end).appendTo(destination);
   //console.log("no parent");
   $(destination).append(html);
@@ -83,7 +83,7 @@ function handle_reply(par) {
       '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
       '<input type="hidden" name="post" value=\"' + post + '\"/>'+
       '<input type="hidden" name="author" value=\"' + username + '\"/>'+
-      '<textarea name="text"> </textarea><br>'+
+      '<textarea name="text"></textarea><br>'+
       '<input type="submit" value="Reply"/>'+
       '</form>').appendTo(par);
     console.log("made form");
@@ -111,5 +111,18 @@ function handle_reply(par) {
       })
       return false;
     });
+}
+
+function formatDate(d) {
+  var months = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+  var h = d.getHours();
+  var m = d.getMinutes();
+  if (m < 10) {
+    m = "0" + m;
+  }
+  var time = (h > 12) ? ((h - 12) + ":" + m + " PM") 
+                      : (h + ":" + m + "AM");
+  return months[d.getMonth()] + " " + d.getDay() + ", " + 
+         d.getFullYear() + " at " + time;
 }
 

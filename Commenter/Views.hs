@@ -34,10 +34,10 @@ import		 Commenter.Models
 
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
-  p ! id "username" $ toHtml user
+  li ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  --script ! src "http://github.com/douglascrockford/JSON-js" $ ""
+  script ! src "/static/js/comments.js" $ ""
   trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
   indexComments comments pid user
 
@@ -49,11 +49,12 @@ indexComments coms pid user = trace "indexComments" $ do
       if (commentAssocPost c) == pid
         then case (commentInReplyTo c) of
           Nothing -> do
-            showComment c user
-            showAllReplies c comments user
             let divid = toValue $ show $ fromJust $ commentId c
             div ! class_ "comment" ! id divid $ do
+              showComment c user
+              showAllReplies c comments user
               button ! class_ "reply-button" $ "Reply"
+              br
           Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
@@ -73,13 +74,11 @@ newComment username postId mparent = trace "newComment" $ do
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
   let cid = commentId comment
-  let divid = toValue $ show $ fromJust cid
   let ltime = utcToLocalTime (utc) $ B.timestamp $ fromJust cid
-  div ! class_ "comment" ! id divid $ do
-    h3 $ toHtml $ commentAuthor comment
-    p $ toHtml $ show $ ltime
-    blockquote $ toHtml $ commentText comment
-    --button ! class_ "reply-button" $ "Reply"
+  --div ! class_ "comment" ! id divid $ do
+  h3 $ toHtml $ commentAuthor comment
+  p $ toHtml $ show $ ltime
+  blockquote $ toHtml $ commentText comment
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do
