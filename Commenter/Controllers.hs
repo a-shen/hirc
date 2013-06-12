@@ -27,7 +27,6 @@ import           Commenter.Models
 import           Commenter.Views
 import           LBH.MP
 import           LBH.Controllers
-import           LBH.Views
 import           Data.Aeson (decode, encode, toJSON)
 
 server :: Application
@@ -67,26 +66,6 @@ index = trace "index called" $ do
     Just atype |  "application/json" `S8.isInfixOf` atype ->
        return $ trace ("encoding to json; comments: " ++ (show comments)) $ ok "application/json" (encode $ toJSON comments)
     _ -> return $ trace "accepting html" $ respondHtml mu $ showPage comments username pid
-
-{-
-  return $ trace ("pid: " ++ str) $
-    case withNew of
-      Just _ -> trace "calling newComment" $ respondHtml mu $ showPage comments username pid
-      Nothing -> trace "Nothing; still calling newComment" $ respondHtml mu $ showPage comments username pid
-      --Nothing -> trace "not calling newComment" $ respondHtml mu $ indexComments comments pid username 
--}
-
-{-
-  case mu of
-    Just u -> do
-      let username = userId $ fromJust mu
-      return $ trace ("pid: " ++ str) $
-        respondHtml mu $ showPage comments username pid
-    Nothing -> do
-      let username = T.pack "Anonymous"
-      return $ trace ("pid: " ++ str) $ 
-        respondHtml mu $ showPage comments username pid
--}
 
 testController :: Controller Response
 testController = do

@@ -18,6 +18,8 @@ import qualified Data.Text as T
 import qualified Data.ByteString.Lazy.Char8 as L8
 import           Data.Monoid (mempty)
 import           Data.Time
+import           Text.Regex
+import		 Data.String.Utils
 import           Hails.Web hiding (body)
 import           Hails.HttpServer.Types
 import           Text.Blaze.Html5 hiding (Tag, map)
@@ -54,7 +56,7 @@ indexComments coms pid user = trace "indexComments" $ do
               showComment c user
               showAllReplies c comments user
               button ! class_ "reply-button" $ "Reply"
-              br
+              h6 $ "line break"
           Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
@@ -74,11 +76,11 @@ newComment username postId mparent = trace "newComment" $ do
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
   let cid = commentId comment
-  let ltime = utcToLocalTime (utc) $ B.timestamp $ fromJust cid
-  --div ! class_ "comment" ! id divid $ do
+  let ltime = show $ utcToLocalTime (utc) $ B.timestamp $ fromJust cid
+  --let text = subRegex (mkRegex "1") (commentText comment) "<br>"
   h3 $ toHtml $ commentAuthor comment
-  p $ toHtml $ show $ ltime
-  blockquote $ toHtml $ commentText comment
+  p $ toHtml $ take ((length ltime) - 3) ltime
+  blockquote $ toHtml $ (commentText comment)
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do
@@ -93,5 +95,20 @@ showAllReplies comment allComments user = do
 showFrame :: String -> Html
 showFrame pid = do
   let path = "/" ++ pid ++ "/comments"
-  iframe ! src (toValue path) ! width "800" ! height "700" $ ""
+  --iframe ! src (toValue path) ! width "1000" ! height "500" $ ""
+  iframe ! src (toValue path) ! A.style "overflow: scroll;" ! width "1000" ! height "500" $ ""
+
+respondHtml muser content = okHtml $ renderHtml $ docTypeHtml $ do
+  head $ do
+    stylesheet "/static/css/bootstrap.css"
+    stylesheet "/static/css/application.css"
+    script ! src "/static/js/jquery.min.js" $ ""
+    script ! src "/static/js/jquery.cookie.js" $ ""
+    script ! src "/static/js/bootstrap.min.js" $ ""
+    script ! src "https://login.persona.org/include.js" $ ""
+    script ! src "/static/js/application.js" $ ""
+  body $ do
+    script ! src "/static/js/jquery.js" $ ""
+    script ! src "/static/js/bootstrap.js" $ ""
+    content
 

@@ -13,12 +13,13 @@
 }
 
 body {
-  padding-top: 60px;
+  padding-top: 20px; 
   font-family: "Roboto", sans-serif;
+  margin-left: 80px;
 }
 
 ul {
-margin-left: 40px;
+margin-left: 0px;
 }
 
 div {
@@ -35,6 +36,10 @@ li {
 display:none;
 }
 
+h6 {
+visibility:hidden;
+}
+
 p {
 line-height:120%;
 font-family: "Roboto", sans-serif;
@@ -44,16 +49,31 @@ font-size:14px;
 blockquote {
 font-family: "Roboto", sans-serif;
 font-size:14px;
+line-height:120%;
 }
 
 .reply {
 font-family: "Roboto", sans-serif;
 font-size:14px;
-margin-left: 40px;
+margin-left: 80px;
 }
 
 h1, h2, h4 {
   font-family: "Gilda Display", serif;
+}
+
+iframe {
+    border:none;
+}
+
+input[type=submit] {
+  border: 1px solid #777777;
+  background: #d8e7f0;
+  font-family: "Roboto", sans-serif;
+  padding: 4px;
+  cursor: pointer;
+  -moz-border-radius: 4px;
+  -webkit-border-radius: 4px;
 }
 
 .reply-button, .reply-button2 {
@@ -75,7 +95,7 @@ h1, h2, h4 {
         
         display:inline-block;
         color:#030003;
-        font-family:"Roboto";
+        font-family: "Roboto", sans-serif;
         font-size:14px;
         font-weight:normal;
         padding:1px 10px;

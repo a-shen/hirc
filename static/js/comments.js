@@ -1,6 +1,7 @@
 
 $(document).ready(function() {
-  $("#commentForm").submit(function() { // making new comment
+  
+  $("#commentForm").submit(function() { // commentForm is for new comment
     //console.log("submit was clicked");
     var dataString = $("#commentForm").serialize();
     var pid = $("#post").val();
@@ -19,7 +20,6 @@ $(document).ready(function() {
           var array = data;
           console.log("data: " + (array.join()));
           var c1 = array[array.length - 1];
-          //console.log("c1 text: " + c1.text + "; text: " + text);
           display_comment(c1, "#root");
           return data;
         },
@@ -35,31 +35,30 @@ $(document).ready(function() {
   });
 });
 
-function display_comment(c1, destination) { // append comment and a reply button to destination div
+/**
+Append the comment and a reply button to the destination div
+*/
+function display_comment(comment, destination) {
   //console.log("dest: " + destination);
-  var cid = c1._id;
+  var cid = comment._id;
   //console.log("id: " + cid);
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date( parseInt( timestamp, 16 ) * 1000 ));
-  var head = '';
-  var end = '</div>';
-  if ((destination != "#root") && ($(destination).parent() == "#root")) { // if it's a reply, indent it
-    head = '<ul><div class="comment" id=' + cid + '>';
-    end = end + '</ul>';
-    //head = '<div class="reply" id=' + cid + '>';
+  var head = '<div class="comment" id=' + cid + '>';
+  if ((destination != "#root") && ($(destination).parent() == "#root")) {
+    head = '<div class="reply" id=' + cid + '>';
   } else {
     head = '<div class="comment" id=' + cid + '>';
   }
   var html = // comment with reply button
   $(head +
-    '<h3>' + c1.author + '</h3>' +
+    '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +
-    '<blockquote>' + c1.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
+    '<blockquote>' + comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
     '<button class="reply-button2">Reply</button><br>' +
-    end).appendTo(destination);
-  //console.log("no parent");
+    '</div><h6>Line break</h6>').appendTo(destination);
   $(destination).append(html);
-  //console.log("added comment and button");
+
   $(".reply-button2").click(function() {
     console.log("reply-button2 clicked");
     var parent = $(this).parent()[0]; // returns a div
@@ -68,6 +67,9 @@ function display_comment(c1, destination) { // append comment and a reply button
   });
 }
 
+/**
+Display a form allowing user to submit a reply, and provide a callback function
+*/
 function handle_reply(par) {
     var username = $("#username").text();
     console.log("username: " + username);
@@ -83,10 +85,11 @@ function handle_reply(par) {
       '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
       '<input type="hidden" name="post" value=\"' + post + '\"/>'+
       '<input type="hidden" name="author" value=\"' + username + '\"/>'+
-      '<textarea name="text"></textarea><br>'+
+      '<textarea name="text"></textarea>' + 
       '<input type="submit" value="Reply"/>'+
       '</form>').appendTo(par);
     console.log("made form");
+
     form.submit(function(event) {
       event.preventDefault();
       var dataString = form.serialize();
@@ -113,16 +116,16 @@ function handle_reply(par) {
     });
 }
 
+/**
+Format the date to something like "2013-6-10, 16:31"
+*/
 function formatDate(d) {
-  var months = new Array("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
   var h = d.getHours();
   var m = d.getMinutes();
   if (m < 10) {
     m = "0" + m;
   }
-  var time = (h > 12) ? ((h - 12) + ":" + m + " PM") 
-                      : (h + ":" + m + "AM");
-  return months[d.getMonth()] + " " + d.getDay() + ", " + 
-         d.getFullYear() + " at " + time;
+  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDay() +
+         " " + h + ":" + m;
 }
 
