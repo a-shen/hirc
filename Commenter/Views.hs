@@ -34,14 +34,18 @@ import qualified Text.Blaze.Html.Renderer.String as SR
 import		 LBH.Views
 import		 Commenter.Models
 
+url :: String
+url = ""
+--url = "https://www.comments.learnbyhacking.org"
+
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
   li ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   script ! src "/static/js/comments.js" $ ""
-  trace ("pid:" ++ (show pid)) $ newComment user pid Nothing
-  indexComments comments pid user
+  newComment user pid Nothing -- show form for making new comment
+  indexComments comments pid user -- index all comments
 
 indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
 indexComments coms pid user = trace "indexComments" $ do
@@ -53,23 +57,23 @@ indexComments coms pid user = trace "indexComments" $ do
           Nothing -> do
             let divid = toValue $ show $ fromJust $ commentId c
             div ! class_ "comment" ! id divid $ do
+              h6 $ "line break"
               showComment c user
               showAllReplies c comments user
               button ! class_ "reply-button" $ "Reply"
-              h6 $ "line break"
           Just reply -> ""  -- it'll be taken care of in showAllReplies
         else ""
 
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 newComment username postId mparent = trace "newComment" $ do
-  let act = ("/" ++ (show postId) ++ "/comments")
+  let act = (url ++ "/" ++ (show postId) ++ "/comments")
   let pid = toValue $ show postId
   trace "form" $ form ! id "commentForm" ! action (toValue act) ! method "POST" $ do
     input ! type_ "hidden" ! name "author" ! id "author" ! value (toValue username)
     input ! type_ "hidden" ! name "post" ! id "post" ! value pid
     input ! type_ "hidden" ! name "parent" ! value ""
     div $ do
-      label ! for "text" $ "Post a comment"
+      label ! for "text" $ b $ "Post a comment"
       textarea ! type_ "text" ! name "text" ! id "text" $ ""
     p $ input ! type_ "submit" ! value "Post"
 
@@ -87,14 +91,19 @@ showAllReplies comment allComments user = do
   let cid = commentId comment
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
-      then do
-        ul $ showComment c user
-        showAllReplies c allComments user
+      then ul $ showComment c user
       else "" -- do nothing
+
+{-
+tz :: TimeZone
+tz = do
+  timezone <- getCurrentTimeZone
+  timezone
+-}
 
 showFrame :: String -> Html
 showFrame pid = do
-  let path = "/" ++ pid ++ "/comments"
+  let path = url ++ "/" ++ pid ++ "/comments"
   --iframe ! src (toValue path) ! width "1000" ! height "500" $ ""
   iframe ! src (toValue path) ! A.style "overflow: scroll;" ! width "1000" ! height "500" $ ""
 

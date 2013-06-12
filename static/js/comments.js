@@ -47,8 +47,10 @@ function display_comment(comment, destination) {
   var head = '<div class="comment" id=' + cid + '>';
   if ((destination != "#root") && ($(destination).parent() == "#root")) {
     head = '<div class="reply" id=' + cid + '>';
-  } else {
-    head = '<div class="comment" id=' + cid + '>';
+  } 
+  if (destination == "#root") {
+    console.log("destination is root; adding space");
+    head = '<h6>line break</h6><div class="comment" id=' + cid + '>';
   }
   var html = // comment with reply button
   $(head +
@@ -56,7 +58,8 @@ function display_comment(comment, destination) {
     '<p>' + date + '</p>' +
     '<blockquote>' + comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
     '<button class="reply-button2">Reply</button><br>' +
-    '</div><h6>Line break</h6>').appendTo(destination);
+    '</div>').appendTo(destination);
+    //'</div><h6>Line break</h6>').appendTo(destination);
   $(destination).append(html);
 
   $(".reply-button2").click(function() {
@@ -85,7 +88,7 @@ function handle_reply(par) {
       '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
       '<input type="hidden" name="post" value=\"' + post + '\"/>'+
       '<input type="hidden" name="author" value=\"' + username + '\"/>'+
-      '<textarea name="text"></textarea>' + 
+      '<textarea name="text"></textarea><br>'+ 
       '<input type="submit" value="Reply"/>'+
       '</form>').appendTo(par);
     console.log("made form");
@@ -117,15 +120,21 @@ function handle_reply(par) {
 }
 
 /**
-Format the date to something like "2013-6-10, 16:31"
+Format the date to something like "2013-06-10 16:31"
 */
 function formatDate(d) {
+  console.log("formatting date: " + d);
   var h = d.getHours();
-  var m = d.getMinutes();
-  if (m < 10) {
-    m = "0" + m;
+  var min = addZero(d.getMinutes());
+  var mon = addZero(d.getMonth() + 1);
+  var day = addZero(d.getDate());
+  return d.getFullYear() + "-" + mon + "-" + day + " " + h + ":" + min;
+}
+
+function addZero(n) {
+  if (n < 10) {
+    n = "0" + n;
   }
-  return d.getFullYear() + "-" + (d.getMonth() + 1) + "-" + d.getDay() +
-         " " + h + ":" + m;
+  return n;
 }
 
