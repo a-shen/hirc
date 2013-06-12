@@ -52,7 +52,7 @@ function display_comment(comment, destination) {
     console.log("destination is root; adding space");
     head = '<h6>line break</h6><div class="comment" id=' + cid + '>';
   }
-  var html = // comment with reply button
+  var html = // comment plus reply button
   $(head +
     '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +

@@ -35,8 +35,8 @@ import		 LBH.Views
 import		 Commenter.Models
 
 url :: String
-url = ""
---url = "https://www.comments.learnbyhacking.org"
+--url = ""
+url = "https://www.comments.learnbyhacking.org"
 
 showPage :: [Comment] -> UserName -> B.ObjectId -> Html
 showPage comments user pid = trace "showPage " $ do
@@ -80,7 +80,8 @@ newComment username postId mparent = trace "newComment" $ do
 showComment :: Comment -> UserName -> Html
 showComment comment user = do
   let cid = commentId comment
-  let ltime = show $ utcToLocalTime (utc) $ B.timestamp $ fromJust cid
+  --let ltime = show $ utcToLocalTime (utc) $ B.timestamp $ fromJust cid
+  let ltime = show $ utcToLocalTime (tz) $ B.timestamp $ fromJust cid
   --let text = subRegex (mkRegex "1") (commentText comment) "<br>"
   h3 $ toHtml $ commentAuthor comment
   p $ toHtml $ take ((length ltime) - 3) ltime
@@ -94,12 +95,13 @@ showAllReplies comment allComments user = do
       then ul $ showComment c user
       else "" -- do nothing
 
-{-
 tz :: TimeZone
-tz = do
-  timezone <- getCurrentTimeZone
-  timezone
--}
+tz = TimeZone { timeZoneMinutes = -420,
+                timeZoneSummerOnly = True, 
+                timeZoneName = "PDT" }
+--tz = do
+  --timezone <- getCurrentTimeZone
+  --timezone
 
 showFrame :: String -> Html
 showFrame pid = do
