@@ -96,9 +96,6 @@ function handle_reply(parent) {
         f.remove();
         return false;
       }
-      error: function(data) {
-        console.log("Error");
-      }
     })
     return false;
   });
