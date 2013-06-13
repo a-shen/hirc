@@ -72,7 +72,7 @@ newComment username postId mparent = do
     input ! type_ "hidden" ! name "post" ! id "post" ! value pid
     input ! type_ "hidden" ! name "parent" ! value ""
     div $ do
-      label ! for "text" $ b $ "Post a comment"
+      label ! for "text" $ h5 $ "Post a comment"
       textarea ! type_ "text" ! name "text" ! id "text" $ ""
     p $ input ! type_ "submit" ! value "Post"
 
