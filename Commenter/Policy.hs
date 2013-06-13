@@ -10,6 +10,7 @@ module Commenter.Policy ( CommentPolicy
                           ) where
 
 import           Prelude hiding (lookup)
+
 import           Data.Maybe
 import qualified Data.List as List
 import qualified Data.Text as T
@@ -26,6 +27,7 @@ import           LIO
 import           LIO.DCLabel
 import           LIO.DCLabel.Core
 import           LIO.DCLabel.Privs.TCB (allPrivTCB)
+import           LIO.TCB
 
 import           Hails.Data.Hson
 import           Hails.Web hiding (body)
@@ -36,13 +38,11 @@ import           Hails.PolicyModule.Groups
 import           Hails.PolicyModule.DSL
 import           Hails.HttpServer.Types
 import           Hails.HttpServer.Auth
-
 import           Hails.Database.Structured hiding (findAll, findAllP)
 
 import           Commenter.Models
 import           LBH.MP
 
-import LIO.TCB
 
 data CommentPolicy = CommentPolicyTCB DCPriv deriving Typeable
 

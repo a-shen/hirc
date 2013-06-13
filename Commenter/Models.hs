@@ -4,18 +4,21 @@
 module Commenter.Models ( Comment(..) ) where
 
 import           Prelude hiding (lookup)
+
 import           Data.Maybe
 import           Data.Text (Text)
 import qualified Data.Text as T
 import qualified Data.ByteString.Char8 as S8
+import		 Data.Aeson
+
+import           GHC.Generics
+
 import           Hails.Data.Hson
 import           Hails.Web
 import           Hails.Database
 import           Hails.Database.Structured
+
 import		 LBH.MP
-import		 Debug.Trace
-import		 Data.Aeson
-import           GHC.Generics
 
 data Comment = Comment
     { commentId        :: Maybe ObjectId
@@ -24,9 +27,8 @@ data Comment = Comment
     , commentText :: String
     , commentInReplyTo :: Maybe ObjectId  -- comment it's in reply to
     } deriving Show
-    --} deriving (Show, Generic)
 
-instance ToJSON Comment where --parent is probably not going to work
+instance ToJSON Comment where
   toJSON (Comment i a p t mr) = 
     object [ "_id"    .= (show $ fromJust i)
            , "author" .= a
@@ -50,7 +52,7 @@ instance DCRecord Comment where
                    , commentText = text
                    , commentInReplyTo = parent }
 
-  toDocument c = trace "toDoc" $
+  toDocument c =
     let mparent = commentInReplyTo c
         parent = if isJust mparent
                    then [ "parent" -: fromJust mparent ]

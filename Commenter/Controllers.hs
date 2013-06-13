@@ -8,11 +8,14 @@ import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy.Char8 as L8
 import qualified Data.Text as T
 import           Data.Maybe
-import		 Debug.Trace
+import           Data.Aeson (decode, encode, toJSON)
+
 import           Control.Monad
+
 import           LIO
 import           LIO.DCLabel
 import           LIO.Concurrent
+
 import           Hails.Data.Hson (ObjectId, labeledRequestToHson)
 import           Hails.Database
 import           Hails.Database.Structured
@@ -21,28 +24,29 @@ import           Hails.Web
 import           Hails.Web.REST (RESTController)
 import qualified Hails.Web.REST as REST
 import qualified Hails.Web.Frank as Frank
+
 import           Network.HTTP.Types
+
+import           LBH.MP
+import           LBH.Controllers
+
 import           Commenter.Policy
 import           Commenter.Models
 import           Commenter.Views
-import           LBH.MP
-import           LBH.Controllers
-import           Data.Aeson (decode, encode, toJSON)
 
 server :: Application
 server = mkRouter $ do
   Frank.post "/users" usersCreate
   routeAll . personaLoginEmailToUid . mkRouter $ do
     routeVar "pid" $ do
-      routeTop testController
       routeName "comments" commentController
     routeName "users" usersController
 
 commentController :: RESTController
 commentController = do
-  REST.index $ maybeRegister $ trace "REST.index" $ index
+  REST.index $ maybeRegister $ index
 
-  REST.create $ trace "REST.create" $ withAuthUser $ const $ trace "REST.create again" $ do
+  REST.create $ withAuthUser $ const $ do
     let ctype = "text/json"
         respJSON403 msg = Response status403 [(hContentType, ctype)] $
                            L8.pack $ "{ \"error\" : " ++
@@ -51,7 +55,7 @@ commentController = do
     liftLIO . withCommentPolicy $ insert "comments" ldoc
     index
 
-index = trace "index called" $ do
+index = do
   mu <- currentUser
   sid <- queryParam "pid"
   let str = S8.unpack $ fromJust sid  -- post id as a string
@@ -64,13 +68,6 @@ index = trace "index called" $ do
   matype <- requestHeader "accept"
   case matype of
     Just atype |  "application/json" `S8.isInfixOf` atype ->
-       return $ trace ("encoding to json; comments: " ++ (show comments)) $ ok "application/json" (encode $ toJSON comments)
-    _ -> return $ trace "accepting html" $ respondHtml mu $ showPage comments username pid
-
-testController :: Controller Response
-testController = do
-  mu <- currentUser
-  sid <- queryParam "pid"
-  let str = S8.unpack $ fromJust sid  -- post id as a string
-  return $ respondHtml mu $ showFrame str
+       return $ ok "application/json" (encode $ toJSON comments)
+    _ -> return $ respondHtml mu $ showPage comments username pid
 
