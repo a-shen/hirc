@@ -13,8 +13,8 @@ $(document).ready(function() {
         data: dataString,
         success: function(data) {
           var array = data;
-          var c1 = array[array.length - 1];
-          display_comment(c1, "#root");
+          var newcomment = array[array.length - 1];
+          display_comment(newcomment, "#root");
           return data;
         },
       });
@@ -34,7 +34,7 @@ Append the comment and a reply button to the destination div
 function display_comment(comment, destination) {
   var cid = comment._id;
   var timestamp = cid.toString().substring(0,8);
-  var date = formatDate(new Date( parseInt( timestamp, 16 ) * 1000 ));
+  var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
   var head = '<div class="comment" id=' + cid + '>';
   if ((destination != "#root") && ($(destination).parent() == "#root")) {
     head = '<div class="reply" id=' + cid + '>';
@@ -49,11 +49,10 @@ function display_comment(comment, destination) {
     '<blockquote>' + comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
     '<button class="reply-button2">Reply</button><br>' +
     '</div>').appendTo(destination);
-    //'</div><h6>Line break</h6>').appendTo(destination);
   $(destination).append(html);
 
   $(".reply-button2").click(function() {
-    var parent = $(this).parent()[0]; // returns a div
+    var parent = $(this).parent()[0];
     handle_reply(parent);
     $(this).remove();
   });
@@ -63,38 +62,46 @@ function display_comment(comment, destination) {
 Display a form allowing user to submit a reply, and provide a callback function
 */
 function handle_reply(parent) {
-    var username = $("#username").text();
-    var id = parent.id; // in reply to
-    var url = document.URL.split("/");
-    var post = url[url.length - 2];
-    var form =
-    $('<form action="#">'+
-      '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
-      '<input type="hidden" name="post" value=\"' + post + '\"/>'+
-      '<input type="hidden" name="author" value=\"' + username + '\"/>'+
-      '<textarea name="text"></textarea><br>'+ 
-      '<input type="submit" value="Reply"/>'+
-      '</form>').appendTo(parent);
-
-    form.submit(function(event) {
-      event.preventDefault();
-      var dataString = form.serialize();
-      var f = $(this);
-      $.ajax({
-        dataType: "json",
-        type: "POST",
-        url: "",
-        data: dataString,
-        success: function(data) {
-          var array = data;
-          var c1 = array[array.length - 1];
-          display_comment(c1, "#"+c1.parent);
-          f.remove();
+  var username = $("#username").text();
+  var id = parent.id; // in reply to
+  var url = document.URL.split("/");
+  if (url.length < 2) {
+    return false;
+  }
+  var postid = url[url.length - 2]; // url is lbh.org/postid/comments
+  var form =
+  $('<form action="#">'+
+    '<input type="hidden" name="parent" value=\"' + id + '\"/>'+
+    '<input type="hidden" name="post" value=\"' + postid + '\"/>'+
+    '<input type="hidden" name="author" value=\"' + username + '\"/>'+
+    '<textarea name="text"></textarea><br>'+ 
+    '<input type="submit" value="Reply"/>'+
+    '</form>').appendTo(parent)
+  form.submit(function(event) {
+    event.preventDefault();
+    var dataString = form.serialize();
+    var f = $(this);
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: "",
+      data: dataString,
+      success: function(data) {
+        var array = data;
+        if (array.length <= 0) {
           return false;
         }
-      })
-      return false;
-    });
+        var newcomment = array[array.length - 1];
+        display_comment(newcomment, "#"+newcomment.parent);
+        f.remove();
+        return false;
+      }
+      error: function(data) {
+        console.log("Error");
+      }
+    })
+    return false;
+  });
 }
 
 /**
