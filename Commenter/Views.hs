@@ -17,6 +17,8 @@ import           Data.Monoid (mempty)
 import           Data.Time
 import		 Data.String.Utils
 
+import           Debug.Trace
+
 import           Hails.Web hiding (body)
 import           Hails.HttpServer.Types
 
@@ -42,7 +44,7 @@ showPage comments user pid = do
   li ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  script ! src "/static/js/comments.js" $ ""
+  --script ! src "/static/js/comments.js" $ ""
   newComment user pid Nothing -- show form for making new comment
   indexComments comments pid user -- index all comments
 
@@ -56,7 +58,7 @@ indexComments coms pid user = do
           Nothing -> do
             let divid = toValue $ show $ fromJust $ commentId c
             div ! class_ "comment" ! id divid $ do
-              h6 $ "line break"
+              --h6 $ "line break"
               showComment c user
               showAllReplies c comments user
               button ! class_ "reply-button" $ "Reply"
@@ -80,9 +82,20 @@ showComment :: Comment -> UserName -> Html
 showComment comment user = do
   let cid = commentId comment
   let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
-  h3 $ toHtml $ commentAuthor comment
-  p $ toHtml $ take ((length ltime) - 3) ltime
-  blockquote $ toHtml $ (commentText comment)
+  let divid = show $ fromJust $ commentId comment
+  div ! id (toValue divid) ! class_ "comment" $ do
+    h3 $ toHtml $ commentAuthor comment
+    p $ toHtml $ take ((length ltime) - 3) ltime
+    blockquote $ toHtml $ (commentText comment)
+    let parent = commentInReplyTo comment
+    let lid = toValue("p" ++ (show $ fromJust $ commentId comment))
+    trace ("parent: " ++ (show parent)) $ case parent of
+      Just r -> li ! id lid $ toHtml $ show r
+      Nothing -> li ! id lid $ ""
+    let author = commentAuthor comment
+    if (author == user) && (author /= "Anonymous")
+      then trace ("id: " ++ divid) $ button ! class_ "edit-button" $ "Edit"
+      else ""
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = do

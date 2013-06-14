@@ -12,6 +12,8 @@ import           Data.Aeson (decode, encode, toJSON)
 
 import           Control.Monad
 
+import           Debug.Trace
+
 import           LIO
 import           LIO.DCLabel
 import           LIO.Concurrent
@@ -53,6 +55,17 @@ commentController = do
                                        show (msg :: String) ++ "}"
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withCommentPolicy $ insert "comments" ldoc
+    index
+
+  REST.update $ withAuthUser $ const $ do
+    let ctype = "text/json"
+        respJSON403 msg = Response status403 [(hContentType, ctype)] $
+                           L8.pack $ "{ \"error\" : " ++
+                                       show (msg :: String) ++ "}"
+    ldoc <- request >>= labeledRequestToHson
+    liftLIO . withCommentPolicy $ do
+      lrec <- fromLabeledDocument ldoc
+      saveLabeledRecord (lrec :: DCLabeled Comment)
     index
 
 index = do

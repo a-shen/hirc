@@ -1,6 +1,6 @@
 
 $(document).ready(function() {
-  
+
   $("#commentForm").submit(function() { // commentForm is for new comment
     var dataString = $("#commentForm").serialize();
     var pid = $("#post").val();
@@ -22,38 +22,132 @@ $(document).ready(function() {
     return false;
   });
   $(".reply-button").click(function() {
-    $(this).hide();
     var parent = $(this).parent()[0]; // returns a div
     handle_reply(parent);
+    $(this).remove();
+  });
+  $(".edit-button").click(function() {
+    //console.log("edit-button clicked");
+    var parent = $(this).parent()[0];
+    console.log("parent: " + parent);
+    console.log("grandparent: " + $(parent).parent());
+    handle_edit(parent);
+    $(this).remove();
   });
 });
 
 /**
-Append the comment and a reply button to the destination div
+Display a form allowing user to edit a comment, and provide a callback function
 */
-function display_comment(comment, destination) {
+function handle_edit(oldcomment) {
+  var username = $("#username").text();
+  if (username == "Anonymous") {
+    return false;
+  }
+  var id = oldcomment.id;
+  var url = document.URL.split("/");
+  if (url.length < 2) {
+    return false;
+  }
+  var postid = url[url.length - 2]; // url is x.org/postid/comments
+  var parent = $("#p"+id).text();
+  var pinput = '<input type="hidden" name="parent" value=\"' + parent + '\"/>'
+  //if (parent == "") {
+    //console.log("no parent");
+    //pinput = '';
+  //}
+  console.log("parent of edited post: " + parent);
+  var form =
+  $('<form action="#">'+
+    '<input type="hidden" name="_id" value=\"' + id + '\"/>'+
+    '<input type="hidden" name="method" value="PUT"/>' +
+    pinput +
+    '<input type="hidden" name="post" value=\"' + postid + '\"/>'+
+    '<input type="hidden" name="author" value=\"' + username + '\"/>'+
+    '<textarea name="text"></textarea><br>'+
+    '<input type="submit" value="Edit"/>'+
+    '</form>').appendTo(oldcomment);
+
+  form.submit(function(event) {
+    event.preventDefault();
+    var dataString = form.serialize();
+    var f = $(this);
+    $.ajax({
+      dataType: "json",
+      type: "PUT",
+      url: "",
+      data: dataString,
+      success: function(data) {
+        if (data.length <= 0) {
+          return false;
+        }
+        var newcomment = data[data.length - 1];
+        for (var n = data.length - 1; n >= 0; n--) { // most of the time it'll be the last one
+          if (data[n]._id == id) {
+            newcomment = data[n];
+          }
+        }
+        replace_comment(newcomment);
+        f.remove();
+        return false;
+      }
+    })
+    return false;
+  });
+}
+
+/**
+Replace the old comment with the updated comment
+*/
+function replace_comment(comment) {
   var cid = comment._id;
+
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
   var head = '<div class="comment" id=' + cid + '>';
-  if ((destination != "#root") && ($(destination).parent() == "#root")) {
-    head = '<div class="reply" id=' + cid + '>';
-  } 
-  if (destination == "#root") {
-    head = '<h6>line break</h6><div class="comment" id=' + cid + '>';
+  //var buttons = '';
+  var buttons = '<button class="reply-button">Reply</button><br>';
+  console.log("buttons: " + buttons);
+  var username = $("#username").text();
+  if (username == comment.author && username != "Anonymous") {
+    buttons = '<button class="edit-button2">Edit</button><br>' + buttons;
+    console.log("buttons: " + buttons);
   }
+  var destination = $("#"+cid)[0].firstChild;
+  if (comment.parent != undefined && comment.parent != "" && comment.parent != null) {
+    console.log("comment.parent = " + comment.parent);
+    console.log("destination = #cid");
+    destination = "#"+cid;
+  }
+
+/*
+  console.log("comment.parent: " + $(comment).parent());
+  if ($(comment).parent() != "root") {
+    console.log("destination = #cid");
+    destination = "#"+cid;
+  }
+*/
+
   var html = // comment plus reply button
   $(head +
     '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +
     '<blockquote>' + comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
-    '<button class="reply-button2">Reply</button><br>' +
+    '<li>' + comment.parent + '</li>' +
+    buttons +
     '</div>').appendTo(destination);
-  $(destination).append(html);
+  console.log(destination);
+  $(destination).replaceWith(html);
 
-  $(".reply-button2").click(function() {
+  $(".reply-button").click(function() {
     var parent = $(this).parent()[0];
     handle_reply(parent);
+    $(this).remove();
+  });
+  $(".edit-button2").click(function() {
+    //console.log("edit-button2 clicked");
+    var parent = $(this).parent()[0]; // returns a div
+    handle_edit(parent);
     $(this).remove();
   });
 }
@@ -76,7 +170,7 @@ function handle_reply(parent) {
     '<input type="hidden" name="author" value=\"' + username + '\"/>'+
     '<textarea name="text"></textarea><br>'+ 
     '<input type="submit" value="Reply"/>'+
-    '</form>').appendTo(parent)
+    '</form>').appendTo(parent);
   form.submit(function(event) {
     event.preventDefault();
     var dataString = form.serialize();
@@ -98,6 +192,42 @@ function handle_reply(parent) {
       }
     })
     return false;
+  });
+}
+
+/**
+Append the comment, a reply button, and an edit button if applicable to the destination div
+*/
+function display_comment(comment, destination) {
+  var cid = comment._id;
+  var timestamp = cid.toString().substring(0,8);
+  var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
+  var head = '<div class="comment" id=' + cid + '>';
+  var buttons = '<button class="reply-button2">Reply</button><br>';
+  var username = $("#username").text();
+  if (username == comment.author && username != "Anonymous") {
+    buttons = '<button class="edit-button2">Edit</button><br>' + buttons;
+  }
+  var html = // comment plus reply button
+  $(head +
+    '<h3>' + comment.author + '</h3>' +
+    '<p>' + date + '</p>' +
+    '<blockquote>' + comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
+    '<li>' + comment.parent + '</li>' +
+    buttons +
+    '</div>').appendTo(destination);
+  $(destination).append(html);
+
+  $(".reply-button2").click(function() {
+    var parent = $(this).parent()[0];
+    handle_reply(parent);
+    $(this).remove();
+  });
+  $(".edit-button2").click(function() {
+    //console.log("edit-button2 clicked");
+    var parent = $(this).parent()[0]; // returns a div
+    handle_edit(parent);
+    $(this).remove();
   });
 }
 
