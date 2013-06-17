@@ -27,10 +27,12 @@ $(document).ready(function() {
     $(this).remove();
   });
   $(".edit-button").click(function() {
-    //console.log("edit-button clicked");
-    var parent = $(this).parent()[0];
+    console.log("id: " + this.id);
+    var id = this.id.substring(2);
+    var parent = $("#"+id);
+    $(this).hide();
     handle_edit(parent);
-    $(this).remove();
+    $(this).show();
   });
 });
 
@@ -52,9 +54,9 @@ function handle_edit(oldcomment) {
   var parent = $("#p"+id).text();
   console.log("parent of edited post: " + parent);
   var form =
-  $('<br><form action="#">'+
+  $('<form action="#">'+
     '<input type="hidden" name="_id" value="' + id + '"/>'+
-    '<input type="hidden" name="method" value="PUT"/>' +
+    '<input type="hidden" name="method" value="PUT"/>'+
     '<input type="hidden" name="parent" value="' + parent + '"/>' +
     '<input type="hidden" name="post" value="' + postid + '"/>'+
     '<input type="hidden" name="author" value="' + username + '"/>'+
@@ -62,7 +64,7 @@ function handle_edit(oldcomment) {
     '<textarea name="text"></textarea><br>'+
     '<input type="submit" value="Edit"/>'+
     '</form>').appendTo("#text"+id);
-    //'</form>').appendTo(oldcomment);
+  console.log("appended form");
 
   form.submit(function(event) {
     event.preventDefault();
@@ -161,10 +163,12 @@ function showComment(comment, destination) {
   var cid = comment._id;
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
-  var buttons = '<button class="reply-button2">Reply</button><br>';
+  var buttons = '<button class="reply-button" id="rb' + cid + '">Reply</button>';
   var username = $("#username").text();
   if (username == comment.author && username != "Anonymous") {
-    buttons = '<button class="edit-button2">Edit</button><br>' + buttons;
+    buttons = 
+      '<button class="edit-button" id="eb' + cid + '">Edit</button>' + 
+      buttons;
   }
   var html = // comment plus reply button
   $('<div class="comment" id=' + cid + '>' +
@@ -172,20 +176,21 @@ function showComment(comment, destination) {
     '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +
     '<blockquote id="text' + cid + '">' + 
-     comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
+    comment.text.replace(/\r?\n/g, '<br />') + '</blockquote>' +
     '<li id="p' + comment._id + '">' + comment.parent + '</li>' +
     buttons +
     '</div>').appendTo(destination);
   $(destination).append(html);
 
-  $(".reply-button2").click(function() {
+  $(".reply-button").click(function() {
     var parent = $(this).parent()[0];
     handle_reply(parent);
     $(this).remove();
   });
-  $(".edit-button2").click(function() {
-    //console.log("edit-button2 clicked");
+  $(".edit-button").click(function() {
     var parent = $(this).parent()[0]; // returns a div
+    console.log("parent: " + parent + "; id: " + parent.id);
+    console.log("parents.length: " + $(this).parent().length);
     handle_edit(parent);
     $(this).remove();
   });

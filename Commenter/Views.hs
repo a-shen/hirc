@@ -70,11 +70,12 @@ indexComments coms pid user = trace ("comments: " ++ (show coms)) $ do
           then trace "belongs to this post" $ case (commentInReplyTo c) of
             Nothing -> do
               trace ("creating div for: " ++ (show c)) $ do
-                let divid = toValue $ show $ fromJust $ commentId c
-                div ! class_ "comment" ! id divid $ do
+                let divid = show $ fromJust $ commentId c
+                div ! class_ "comment" ! id (toValue divid) $ do
                   --h6 $ "line break"
                   showComment c comments user
-                  button ! class_ "reply-button" $ "Reply"
+                  let rid = toValue("rb" ++ divid)
+                  button ! id rid ! class_ "reply-button" $ "Reply"
             Just reply -> ""  -- it'll be taken care of in showAllReplies
           else ""
 
@@ -83,8 +84,9 @@ showComment comment allComments user = trace ("showing comment: " ++ (show comme
   let cid = commentId comment
   let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
   let divid = show $ fromJust cid
-  let bqid = "text" ++ divid
-  let lid = "p" ++ divid
+  let bqid = "text" ++ divid  --for comment text
+  let lid = "p" ++ divid  --for parent
+  let eid = "eb" ++ divid  --for edit button
   --div ! id (toValue divid) ! class_ "comment" $ do
   h3 $ toHtml $ commentAuthor comment
   p $ toHtml $ take ((length ltime) - 3) ltime
@@ -95,7 +97,7 @@ showComment comment allComments user = trace ("showing comment: " ++ (show comme
     Nothing -> li ! id (toValue lid) $ ""
   let author = commentAuthor comment
   if (author == user) && (author /= "Anonymous")
-    then button ! class_ "edit-button" $ "Edit"
+    then button ! id (toValue eid) ! class_ "edit-button" $ "Edit"
     else ""
   showAllReplies comment allComments user
 
@@ -106,8 +108,7 @@ showAllReplies comment allComments user = trace ("showing all replies for: " ++ 
     if ((commentInReplyTo c) == cid)
       then trace ("found reply: " ++ (show c)) $ do
         let divid = show $ fromJust cid
-        div ! id (toValue divid) ! class_ "comment" $ do
-        showComment c allComments user
+        div ! id (toValue divid) ! class_ "comment" $ showComment c allComments user
       --then trace ("found reply: " ++ (show c)) $ ul $ showComment c allComments user
       else ""
 
