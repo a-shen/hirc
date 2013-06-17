@@ -116,6 +116,7 @@ Display a form allowing user to submit a reply, and provide a callback function
 function handle_reply(parent) {
   var username = $("#username").text();
   var id = parent.id; // in reply to
+  console.log("parent id: " + id);
   var url = document.URL.split("/");
   if (url.length < 2) {
     return false;

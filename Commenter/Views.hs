@@ -104,7 +104,8 @@ showAllReplies comment allComments user = trace ("showing all replies for: " ++ 
   let cid = commentId comment
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
-      then trace ("found reply: " ++ (show c)) $ ul $ showComment c allComments user
+      then trace ("found reply: " ++ (show c)) $ showComment c allComments user
+      --then trace ("found reply: " ++ (show c)) $ ul $ showComment c allComments user
       else ""
 
 pdt :: TimeZone
