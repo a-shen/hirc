@@ -52,7 +52,7 @@ function handle_edit(oldcomment) {
   var parent = $("#p"+id).text();
   console.log("parent of edited post: " + parent);
   var form =
-  $('<form action="#">'+
+  $('<br><form action="#">'+
     '<input type="hidden" name="_id" value="' + id + '"/>'+
     '<input type="hidden" name="method" value="PUT"/>' +
     '<input type="hidden" name="parent" value="' + parent + '"/>' +
@@ -61,7 +61,8 @@ function handle_edit(oldcomment) {
     '<input type="hidden" name="edited" value="True"/>'+
     '<textarea name="text"></textarea><br>'+
     '<input type="submit" value="Edit"/>'+
-    '</form>').appendTo(oldcomment);
+    '</form>').appendTo("#text"+id);
+    //'</form>').appendTo(oldcomment);
 
   form.submit(function(event) {
     event.preventDefault();
