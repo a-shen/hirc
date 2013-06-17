@@ -168,7 +168,7 @@ function showComment(comment, destination) {
   }
   var html = // comment plus reply button
   $('<div class="comment" id=' + cid + '>' +
-    '<h6>line break</h6>' +
+    //'<h6>line break</h6>' +
     '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +
     '<blockquote id="text' + cid + '">' + 

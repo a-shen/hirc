@@ -47,45 +47,6 @@ showPage comments user pid = do
   newComment user pid Nothing -- show form for making new comment
   indexComments comments pid user -- index all comments
 
-indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
-indexComments coms pid user = trace ("comments: " ++ (show coms)) $ do
-  let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
-  ul ! id "root" $ do
-    forM_ comments $ \c -> do
-      trace ("processing comment: " ++ (show c)) $ do
-        if (commentAssocPost c) == pid
-          then trace "belongs to this post" $ case (commentInReplyTo c) of
-            Nothing -> do
-              trace ("creating div for: " ++ (show c)) $ do
-                --let divid = toValue $ show $ fromJust $ commentId c
-                --div ! class_ "comment" ! id divid $ do
-                  --h6 $ "line break"
-                  showComment c comments user
-                  button ! class_ "reply-button" $ "Reply"
-            Just reply -> ""  -- it'll be taken care of in showAllReplies
-          else ""
-
-showComment :: Comment -> [Comment] -> UserName -> Html
-showComment comment allComments user = trace ("showing comment: " ++ (show comment)) $ do
-  let cid = commentId comment
-  let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
-  let divid = show $ fromJust cid
-  let bqid = "text" ++ divid
-  let lid = "p" ++ divid
-  div ! id (toValue divid) ! class_ "comment" $ do
-    h3 $ toHtml $ commentAuthor comment
-    p $ toHtml $ take ((length ltime) - 3) ltime
-    blockquote ! id (toValue bqid) $ toHtml $ (commentText comment)
-    let parent = commentInReplyTo comment
-    trace ("parent: " ++ (show parent)) $ case parent of
-      Just r -> li ! id (toValue lid) $ toHtml $ show r
-      Nothing -> li ! id (toValue lid) $ ""
-    let author = commentAuthor comment
-    if (author == user) && (author /= "Anonymous")
-      then button ! class_ "edit-button" $ "Edit"
-      else ""
-    showAllReplies comment allComments user
-
 newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 newComment username postId mparent = do
   let act = (url ++ "/" ++ (show postId) ++ "/comments")
@@ -99,12 +60,54 @@ newComment username postId mparent = do
       textarea ! type_ "text" ! name "text" ! id "text" $ ""
     p $ input ! type_ "submit" ! value "Post"
 
+indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
+indexComments coms pid user = trace ("comments: " ++ (show coms)) $ do
+  let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
+  ul ! id "root" $ do
+    forM_ comments $ \c -> do
+      trace ("processing comment: " ++ (show c)) $ do
+        if (commentAssocPost c) == pid
+          then trace "belongs to this post" $ case (commentInReplyTo c) of
+            Nothing -> do
+              trace ("creating div for: " ++ (show c)) $ do
+                let divid = toValue $ show $ fromJust $ commentId c
+                div ! class_ "comment" ! id divid $ do
+                  --h6 $ "line break"
+                  showComment c comments user
+                  button ! class_ "reply-button" $ "Reply"
+            Just reply -> ""  -- it'll be taken care of in showAllReplies
+          else ""
+
+showComment :: Comment -> [Comment] -> UserName -> Html
+showComment comment allComments user = trace ("showing comment: " ++ (show comment)) $ do
+  let cid = commentId comment
+  let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
+  let divid = show $ fromJust cid
+  let bqid = "text" ++ divid
+  let lid = "p" ++ divid
+  --div ! id (toValue divid) ! class_ "comment" $ do
+  h3 $ toHtml $ commentAuthor comment
+  p $ toHtml $ take ((length ltime) - 3) ltime
+  blockquote ! id (toValue bqid) $ toHtml $ (commentText comment)
+  let parent = commentInReplyTo comment
+  trace ("parent: " ++ (show parent)) $ case parent of
+    Just r -> li ! id (toValue lid) $ toHtml $ show r
+    Nothing -> li ! id (toValue lid) $ ""
+  let author = commentAuthor comment
+  if (author == user) && (author /= "Anonymous")
+    then button ! class_ "edit-button" $ "Edit"
+    else ""
+  showAllReplies comment allComments user
+
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
 showAllReplies comment allComments user = trace ("showing all replies for: " ++ (show comment)) $ do
   let cid = commentId comment
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
-      then trace ("found reply: " ++ (show c)) $ showComment c allComments user
+      then trace ("found reply: " ++ (show c)) $ do
+        let divid = show $ fromJust cid
+        div ! id (toValue divid) ! class_ "comment" $ do
+        showComment c allComments user
       --then trace ("found reply: " ++ (show c)) $ ul $ showComment c allComments user
       else ""
 
