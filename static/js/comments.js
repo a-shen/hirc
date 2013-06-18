@@ -1,8 +1,8 @@
 
 $(document).ready(function() {
 
-  $("#commentForm").submit(function() { // commentForm is for new comment
-    var dataString = $("#commentForm").serialize();
+  $("#newCommentForm").submit(function() {
+    var dataString = $("#newCommentForm").serialize();
     var pid = $("#post").val();
     var text = $("#text").val();
     if ((text != '') && (text != null) && (text != "undefined")) {
@@ -44,13 +44,11 @@ function handle_edit(oldcomment, id) {
   if (username == "Anonymous") {
     return false;
   }
-  //var id = oldcomment.id;
   var url = document.URL.split("/");
   if (url.length < 2) {
     return false;
   }
   var postid = url[url.length - 2]; // url is x.org/postid/comments
-  //var parent = oldcomment.parent;
   var parent = $("#p"+id).text();
   console.log("parent of edited post: " + parent);
   console.log("searching for: " + id);
@@ -83,8 +81,8 @@ function handle_edit(oldcomment, id) {
         if (data.length <= 0) {
           return false;
         }
-        var target = data[data.length - 1];
-        for (var n = data.length - 1; n >= 0; n--) { // most of the time it'll be the last one
+        var target = data[data.length - 1]; // the comment that was edited
+        for (var n = data.length - 1; n >= 0; n--) { 
           if (data[n]._id == id) {
             target = data[n];
           }
@@ -176,7 +174,6 @@ function showComment(comment, destination) {
   }
   var html = // comment plus reply button
   $('<div class="comment" id=' + cid + '>' +
-    //'<h6>line break</h6>' +
     '<h3>' + comment.author + '</h3>' +
     '<p>' + date + '</p>' +
     '<blockquote id="text' + cid + '">' + 
@@ -202,7 +199,7 @@ function showComment(comment, destination) {
 }
 
 /**
-Format the date to something like "2013-06-10 16:31"
+Format the date to something like "2013-06-10 16:31" to match the haskell format
 */
 function formatDate(d) {
   var h = d.getHours();

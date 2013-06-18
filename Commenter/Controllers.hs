@@ -12,8 +12,6 @@ import           Data.Aeson (decode, encode, toJSON)
 
 import           Control.Monad
 
-import           Debug.Trace
-
 import           LIO
 import           LIO.DCLabel
 import           LIO.Concurrent
@@ -74,15 +72,13 @@ index = do
   let str = S8.unpack $ fromJust sid  -- post id as a string
   let pid = read str -- post id as an ObjectId
   comments <- liftLIO . withCommentPolicy $ 
-    findAll $ select [] "comments"
-    --findAll $ select ["post" -: pid] "comments"
-  trace (show comments) $ do
-    let username = case mu of
-                     Just u -> userId u
-                     Nothing -> "Anonymous"
-    matype <- requestHeader "accept"
-    case matype of
-      Just atype | "application/json" `S8.isInfixOf` atype ->
-         return $ ok "application/json" (encode $ toJSON comments)
-      _ -> return $ respondHtml mu $ showPage comments username pid
+    findAll $ select [] "comments" -- the comments get filtered in Views because findAll with a selector doesn't work
+  let username = case mu of
+                   Just u -> userId u
+                   Nothing -> "Anonymous"
+  matype <- requestHeader "accept"
+  case matype of
+    Just atype | "application/json" `S8.isInfixOf` atype ->
+       return $ ok "application/json" (encode $ toJSON comments)
+    _ -> return $ respondHtml mu $ showPage comments username pid
 

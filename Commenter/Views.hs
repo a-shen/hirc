@@ -16,8 +16,6 @@ import           Data.Monoid (mempty)
 import           Data.Time
 import		 Data.String.Utils
 
-import           Debug.Trace
-
 import           Hails.Web hiding (body)
 import           Hails.HttpServer.Types
 
@@ -51,7 +49,7 @@ newComment :: UserName -> B.ObjectId -> Maybe B.ObjectId -> Html
 newComment username postId mparent = do
   let act = (url ++ "/" ++ (show postId) ++ "/comments")
   let pid = toValue $ show postId
-  form ! id "commentForm" ! action (toValue act) ! method "POST" $ do
+  form ! id "newCommentForm" ! action (toValue act) ! method "POST" $ do
     input ! type_ "hidden" ! name "author" ! id "author" ! value (toValue username)
     input ! type_ "hidden" ! name "post" ! id "post" ! value pid
     input ! type_ "hidden" ! name "parent" ! value ""
@@ -61,26 +59,24 @@ newComment username postId mparent = do
     p $ input ! type_ "submit" ! value "Post"
 
 indexComments :: [Comment] -> B.ObjectId -> UserName -> Html
-indexComments coms pid user = trace ("comments: " ++ (show coms)) $ do
+indexComments coms pid user = do
   let comments = sortBy (comparing (B.timestamp . fromJust . commentId)) coms
   ul ! id "root" $ do
     forM_ comments $ \c -> do
-      trace ("processing comment: " ++ (show c)) $ do
-        if (commentAssocPost c) == pid
-          then trace "belongs to this post" $ case (commentInReplyTo c) of
-            Nothing -> do
-              trace ("creating div for: " ++ (show c)) $ do
-                let divid = show $ fromJust $ commentId c
-                div ! class_ "comment" ! id (toValue divid) $ do
-                  --h6 $ "line break"
-                  showComment c comments user
-                  let rid = toValue("rb" ++ divid)
-                  button ! id rid ! class_ "reply-button" $ "Reply"
-            Just reply -> ""  -- it'll be taken care of in showAllReplies
-          else ""
+      if (commentAssocPost c) == pid
+        then case (commentInReplyTo c) of
+          Nothing -> do
+            let divid = show $ fromJust $ commentId c
+            div ! class_ "comment" ! id (toValue divid) $ do
+              --h6 $ "line break"
+              showComment c comments user
+              let rid = toValue("rb" ++ divid)
+              button ! id rid ! class_ "reply-button" $ "Reply"
+          Just reply -> ""  -- it'll be taken care of in showAllReplies
+        else ""
 
 showComment :: Comment -> [Comment] -> UserName -> Html
-showComment comment allComments user = trace ("showing comment: " ++ (show comment)) $ do
+showComment comment allComments user = do
   let cid = commentId comment
   let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
   let divid = show $ fromJust cid
@@ -92,7 +88,7 @@ showComment comment allComments user = trace ("showing comment: " ++ (show comme
   p $ toHtml $ take ((length ltime) - 3) ltime
   blockquote ! id (toValue tid) $ toHtml $ (commentText comment)
   let parent = commentInReplyTo comment
-  trace ("parent: " ++ (show parent)) $ case parent of
+  case parent of
     Just r -> li ! id (toValue lid) $ toHtml $ show r
     Nothing -> li ! id (toValue lid) $ ""
   let author = commentAuthor comment
@@ -102,14 +98,13 @@ showComment comment allComments user = trace ("showing comment: " ++ (show comme
   showAllReplies comment allComments user
 
 showAllReplies :: Comment -> [Comment] -> UserName -> Html
-showAllReplies comment allComments user = trace ("showing all replies for: " ++ (show comment)) $ do
+showAllReplies comment allComments user = do
   let cid = commentId comment
   forM_ allComments $ \c -> do
     if ((commentInReplyTo c) == cid)
-      then trace ("found reply: " ++ (show c)) $ do
+      then do
         let divid = show $ fromJust cid
         div ! id (toValue divid) ! class_ "comment" $ showComment c allComments user
-      --then trace ("found reply: " ++ (show c)) $ ul $ showComment c allComments user
       else ""
 
 pdt :: TimeZone
