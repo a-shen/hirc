@@ -27,9 +27,7 @@ $(document).ready(function() {
     $(this).remove();
   });
   $(".edit-button").click(function() {
-    console.log("edit button clicked");
     var id = this.id.substring(2);
-    console.log("id: " + id);
     var parent = $("#"+id);
     handle_edit(parent, id);
     $(this).remove();
@@ -50,9 +48,6 @@ function handle_edit(oldcomment, id) {
   }
   var postid = url[url.length - 2]; // url is x.org/postid/comments
   var parent = $("#p"+id).text();
-  console.log("parent of edited post: " + parent);
-  console.log("searching for: " + id);
-  console.log("appending form to: " + $("#text"+id).text());
   var form =
   $('<form action="#">'+
     '<input type="hidden" name="_id" value="' + id + '"/>'+
@@ -66,7 +61,6 @@ function handle_edit(oldcomment, id) {
     '</form>').appendTo("#text"+id);
 
   $("#text"+id).append(form);
-  console.log("appended form");
 
   form.submit(function(event) {
     event.preventDefault();
@@ -120,7 +114,6 @@ Display a form allowing user to submit a reply, and provide a callback function
 function handle_reply(parent) {
   var username = $("#username").text();
   var id = parent.id; // in reply to
-  console.log("parent id: " + id);
   var url = document.URL.split("/");
   if (url.length < 2) {
     return false;
@@ -189,9 +182,7 @@ function showComment(comment, destination) {
     $(this).remove();
   });
   $(".edit-button2").click(function() {
-    console.log("edit button 2 clicked");
     var id = this.id.substring(2);
-    console.log("id: " + id);
     var parent = $("#"+id);
     handle_edit(parent, id);
     $(this).remove();
