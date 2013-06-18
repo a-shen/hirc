@@ -84,13 +84,13 @@ showComment comment allComments user = trace ("showing comment: " ++ (show comme
   let cid = commentId comment
   let ltime = show $ utcToLocalTime (pdt) $ B.timestamp $ fromJust cid
   let divid = show $ fromJust cid
-  let bqid = "text" ++ divid  --for comment text
+  let tid = "text" ++ divid  --for comment text
   let lid = "p" ++ divid  --for parent
   let eid = "eb" ++ divid  --for edit button
   --div ! id (toValue divid) ! class_ "comment" $ do
   h3 $ toHtml $ commentAuthor comment
   p $ toHtml $ take ((length ltime) - 3) ltime
-  blockquote ! id (toValue bqid) $ toHtml $ (commentText comment)
+  blockquote ! id (toValue tid) $ toHtml $ (commentText comment)
   let parent = commentInReplyTo comment
   trace ("parent: " ++ (show parent)) $ case parent of
     Just r -> li ! id (toValue lid) $ toHtml $ show r

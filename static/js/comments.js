@@ -27,24 +27,24 @@ $(document).ready(function() {
     $(this).remove();
   });
   $(".edit-button").click(function() {
-    console.log("id: " + this.id);
+    console.log("edit button clicked");
     var id = this.id.substring(2);
+    console.log("id: " + id);
     var parent = $("#"+id);
-    $(this).hide();
-    handle_edit(parent);
-    $(this).show();
+    handle_edit(parent, id);
+    $(this).remove();
   });
 });
 
 /**
 Display a form allowing user to edit a comment, and provide a callback function
 */
-function handle_edit(oldcomment) {
+function handle_edit(oldcomment, id) {
   var username = $("#username").text();
   if (username == "Anonymous") {
     return false;
   }
-  var id = oldcomment.id;
+  //var id = oldcomment.id;
   var url = document.URL.split("/");
   if (url.length < 2) {
     return false;
@@ -53,6 +53,8 @@ function handle_edit(oldcomment) {
   //var parent = oldcomment.parent;
   var parent = $("#p"+id).text();
   console.log("parent of edited post: " + parent);
+  console.log("searching for: " + id);
+  console.log("appending form to: " + $("#text"+id).text());
   var form =
   $('<form action="#">'+
     '<input type="hidden" name="_id" value="' + id + '"/>'+
@@ -64,6 +66,8 @@ function handle_edit(oldcomment) {
     '<textarea name="text"></textarea><br>'+
     '<input type="submit" value="Edit"/>'+
     '</form>').appendTo("#text"+id);
+
+  $("#text"+id).append(form);
   console.log("appended form");
 
   form.submit(function(event) {
@@ -167,7 +171,7 @@ function showComment(comment, destination) {
   var username = $("#username").text();
   if (username == comment.author && username != "Anonymous") {
     buttons = 
-      '<button class="edit-button" id="eb' + cid + '">Edit</button>' + 
+      '<button class="edit-button2" id="eb' + cid + '">Edit</button>' + 
       buttons;
   }
   var html = // comment plus reply button
@@ -187,11 +191,12 @@ function showComment(comment, destination) {
     handle_reply(parent);
     $(this).remove();
   });
-  $(".edit-button").click(function() {
-    var parent = $(this).parent()[0]; // returns a div
-    console.log("parent: " + parent + "; id: " + parent.id);
-    console.log("parents.length: " + $(this).parent().length);
-    handle_edit(parent);
+  $(".edit-button2").click(function() {
+    console.log("edit button 2 clicked");
+    var id = this.id.substring(2);
+    console.log("id: " + id);
+    var parent = $("#"+id);
+    handle_edit(parent, id);
     $(this).remove();
   });
 }
