@@ -43,7 +43,7 @@ showPage comments user pid = do
   li ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  --script ! src "/static/js/comments.js" $ ""
+  script ! src "/static/js/comments.js" $ ""
   newComment user pid Nothing -- show form for making new comment
   indexComments comments pid user -- index all comments
 

@@ -167,11 +167,11 @@ function showComment(comment, destination) {
   var cid = comment._id;
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
-  var buttons = '<button class="reply-button" id="rb' + cid + '">Reply</button>';
+  var buttons = '<button class="reply-button" id="rb' + cid + '">Reply</button><br>';
   var username = $("#username").text();
   if (username == comment.author && username != "Anonymous") {
     buttons = 
-      '<button class="edit-button2" id="eb' + cid + '">Edit</button>' + 
+      '<button class="edit-button2" id="eb' + cid + '">Edit</button><br>'+
       buttons;
   }
   var html = // comment plus reply button
