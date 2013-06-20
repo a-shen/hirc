@@ -1,7 +1,7 @@
 
 $(document).ready(function() {
 
-  $("#chats").load(document.URL);
+  //$("#chats").load(document.URL);
   
   $("#chatForm").submit(function() {
     var dataString = $("#chatForm").serialize();
