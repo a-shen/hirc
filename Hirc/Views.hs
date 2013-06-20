@@ -34,15 +34,12 @@ import		 Hirc.Models
 indexChannels :: [Channel] -> Html
 indexChannels channels = do
   h1 $ "Channels"
-  h3 ! href "/channels/new" $ "New Channel"
+  li $ a ! href "/channels/new" $ "New Channel"
   ul $ do
     forM_ channels $ \chan -> do
-      case (channelListed chan) of
-        "on" -> do
-          let cid = show $ fromJust $ channelId chan
-          let link = toValue ("/" ++ cid ++ "/chats")
-          li $ a ! href link $ toHtml $ channelName chan  
-        _ -> ""
+      let cid = show $ fromJust $ channelId chan
+      let link = toValue ("/" ++ cid ++ "/chats")
+      li $ a ! href link $ toHtml $ channelName chan  
 
 newChannel :: Html
 newChannel = do

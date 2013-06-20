@@ -1,7 +1,42 @@
 
 $(document).ready(function() {
 
-  //$("#chats").load(document.URL);
+var nchats = 0; // number of chats currently indexed on the page
+
+function poll() {
+  setTimeout(function(){
+    $.ajax({
+      url: document.URL,
+      success: function(data) {
+        console.log(data);
+        for (var n = nchats; n < data.length; n++) {
+          $("#chats").append(showChat(data[n]));
+        }
+        nchats = data.length;
+        console.log("nchats: " + nchats);
+        poll();
+      }, dataType: "json"
+    });
+  }, 750);  // refresh every 0.75 sec
+}
+
+poll();
+
+
+/*
+  (function poll() {
+    $.ajax({ 
+      url: document.URL, 
+      success: function(data) {
+        console.log("poll data: " + data);
+        $("#chats").append(data.value);
+      }, 
+      dataType: "json", 
+      timeout: 30000000000,
+      complete: poll
+    });
+  })();
+*/
   
   $("#chatForm").submit(function() {
     var dataString = $("#chatForm").serialize();
@@ -14,7 +49,9 @@ $(document).ready(function() {
         success: function(data) {
           var array = data;
           var newchat = array[array.length - 1];
-          showChat(newchat);
+          poll();
+          //var html = showChat(newchat);
+          //$("#chats").append(html);
           return data;
         },
       });
@@ -23,8 +60,9 @@ $(document).ready(function() {
   });
 });
 
+
 /**
-Append the new chat to the chats div
+Format the new chat to the chats div
 */
 function showChat(chat) {
   var cid = chat._id;
@@ -33,7 +71,6 @@ function showChat(chat) {
   var html = // comment plus reply button
   $('<p>' + "<" + date + ">" + '<b>' + chat.author + ": " + '</b>' + 
     chat.text + '</p>').appendTo("#chats");
-  $("#chats").append(html);
 }
 
 /**
