@@ -40,6 +40,7 @@ server = mkRouter $ do
   routeName "channels" channelsController
   routeVar "chanId" $ do
     routeName "chats" chatsController
+    --routeName "auth" authController
 
 channelsController :: RESTController
 channelsController = do
@@ -60,7 +61,8 @@ channelsController = do
    
 chatsController :: RESTController
 chatsController = do
-  REST.index $ withUserOrDoAuth $ \usr -> trace "chats.index" $ 
+  REST.index $ withUserOrDoAuth $ \usr -> trace "chats.index" $ do
+    sid <- queryParam "chanId"
     listChats usr
 
   REST.create $ withUserOrDoAuth $ \usr -> trace "chats.create" $ do
@@ -75,17 +77,36 @@ chatsController = do
 listChats usr = trace "listChats" $ do
   sid <- queryParam "chanId"
   let str = S8.unpack $ fromJust sid  -- chanId id as a string
-  let chanId = read str -- chanId id as an ObjectId
-  chats <- liftLIO . withHircPolicy $ 
+  let chanId = read str :: ObjectId -- chanId id as an ObjectId
+  chats <- liftLIO . withHircPolicy $
     findAll $ select ["chan" -: chanId] "chats"
   trace ("found chats: " ++ (show chats)) $ do
-    mchannel <- liftLIO . withHircPolicy $ 
+    mchannel <- liftLIO . withHircPolicy $
       findWhere $ select ["_id" -: chanId] "channels"
-    let cname = toHtml $ channelName $ fromJust mchannel
-    trace ("channel: " ++ (channelName $ fromJust mchannel)) $ do
-      matype <- requestHeader "accept"
-      case matype of
-        Just atype |  "application/json" `S8.isInfixOf` atype ->
-           return $ ok "application/json" (encode $ toJSON chats)
-        _ -> return $ respondHtml cname $ showChatPage chats usr chanId
+    case mchannel of
+      Just channel -> do
+        let cname = toHtml $ channelName channel
+        trace ("channel: " ++ (channelName $ fromJust mchannel)) $ do
+          matype <- requestHeader "accept"
+          case matype of
+            Just atype |  "application/json" `S8.isInfixOf` atype ->
+              return $ ok "application/json" (encode $ toJSON chats)
+            _ -> return $ respondHtml cname $ showChatPage chats usr channel
+      _ -> return notFound
+
+{-
+authController :: RESTController
+authController = do
+  REST.index $ do
+    sid <- queryParam "chanId"
+    let str = S8.unpack $ fromJust sid  -- chanId id as a string
+    let chanId = read str -- chanId id as an ObjectId
+    mchannel <- liftLIO . withHircPolicy $
+      findWhere $ select ["_id" -: chanId] "channels"
+      case mchannel of
+        Just channel -> do
+          respondHtml "Authenticate" $ reqPwd channel
+          return $ redirectTo "/" ++ str ++ "/chats"
+        _ -> return notFound
+-}
 

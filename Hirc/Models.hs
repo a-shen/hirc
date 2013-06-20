@@ -56,24 +56,24 @@ instance DCRecord Chat where
 
 
 data Channel = Channel
-    { channelId      :: Maybe ObjectId
-    , channelName    :: String
-    , channelListed :: String
+    { channelId       :: Maybe ObjectId
+    , channelName     :: String
+    , channelPassword :: Maybe String
     } deriving Show
 
 instance DCRecord Channel where
   fromDocument doc = trace "fromDoc" $ do
     let cid = lookupObjId "_id" doc
     name <- lookup "name" doc
-    listed <- lookup "listed" doc
-    return Channel { channelId     = cid
-                   , channelName   = name
-                   , channelListed = listed }
+    pwd <- lookup "pwd" doc
+    return Channel { channelId       = cid
+                   , channelName     = name
+                   , channelPassword = pwd }
 
   toDocument c = trace "toDoc" $
     [ "_id"     -: channelId c
     , "name"    -: channelName c
-    , "listed" -: channelListed c ]
+    , "pwd"     -: channelPassword c ]
 
   recordCollection _ = "channels"
 

@@ -1,43 +1,27 @@
 
 $(document).ready(function() {
 
-var nchats = 0; // number of chats currently indexed on the page
+  var nchats = 0; // number of chats currently indexed on the page
 
-function poll() {
-  setTimeout(function(){
-    $.ajax({
-      url: document.URL,
-      success: function(data) {
-        console.log(data);
-        for (var n = nchats; n < data.length; n++) {
-          $("#chats").append(showChat(data[n]));
-        }
-        nchats = data.length;
-        console.log("nchats: " + nchats);
-        poll();
-      }, dataType: "json"
-    });
-  }, 750);  // refresh every 0.75 sec
-}
+  function poll() {
+    setTimeout(function() {
+      $.ajax({
+        url: document.URL,
+        success: function(data) {
+          console.log(data);
+          for (var n = nchats; n < data.length; n++) {
+            $("#chats").append(showChat(data[n]));
+          }
+          nchats = data.length;
+          console.log("nchats: " + nchats);
+          poll();
+        }, dataType: "json"
+      });
+    }, 750);  // refresh every 0.75 sec
+  }
 
-poll();
+  poll();
 
-
-/*
-  (function poll() {
-    $.ajax({ 
-      url: document.URL, 
-      success: function(data) {
-        console.log("poll data: " + data);
-        $("#chats").append(data.value);
-      }, 
-      dataType: "json", 
-      timeout: 30000000000,
-      complete: poll
-    });
-  })();
-*/
-  
   $("#chatForm").submit(function() {
     var dataString = $("#chatForm").serialize();
     if ((text != '') && (text != null) && (text != "undefined")) {
@@ -49,9 +33,8 @@ poll();
         success: function(data) {
           var array = data;
           var newchat = array[array.length - 1];
+          $("#text").val("");
           poll();
-          //var html = showChat(newchat);
-          //$("#chats").append(html);
           return data;
         },
       });
