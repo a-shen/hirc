@@ -7,6 +7,8 @@ module Hirc.Controllers where
 import           Data.Bson
 import qualified Data.ByteString.Char8 as S8
 import qualified Data.ByteString.Lazy.Char8 as L8
+import           Data.List hiding (insert)
+import           Data.Ord
 import qualified Data.Text as T
 import           Data.Maybe
 import           Data.Aeson (decode, encode, toJSON)
@@ -54,6 +56,10 @@ channelsController = do
     return $ respondHtml "New Channel" $ newChannel
     
   REST.create $ withUserOrDoAuth $ \usr -> trace "channels.create" $ do
+    let ctype = "text/json"
+        respJSON403 msg = Response status403 [(hContentType, ctype)] $
+                           L8.pack $ "{ \"error\" : " ++
+                                       show (msg :: String) ++ "}"
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withHircPolicy $ insert "channels" ldoc
     return $ redirectTo "/channels"
@@ -77,9 +83,11 @@ chatsController = do
 listChats usr = trace "listChats" $ do
   sid <- queryParam "chanId"
   let str = S8.unpack $ fromJust sid  -- chanId id as a string
-  let chanId = read str :: ObjectId -- chanId id as an ObjectId
-  chats <- liftLIO . withHircPolicy $
-    findAll $ select ["chan" -: chanId] "chats"
+  let chanId = read (S8.unpack $ fromJust sid) :: ObjectId
+  allChats <- liftLIO . withHircPolicy $ findAll $ select [] "chats"
+  let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
+  let cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
+  let chats = filter (\c -> (chatAssocChan c) == chanId) allChats --todo
   trace ("found chats: " ++ (show chats)) $ do
     mchannel <- liftLIO . withHircPolicy $
       findWhere $ select ["_id" -: chanId] "channels"
@@ -93,20 +101,4 @@ listChats usr = trace "listChats" $ do
               return $ ok "application/json" (encode $ toJSON chats)
             _ -> return $ respondHtml cname $ showChatPage chats usr channel
       _ -> return notFound
-
-{-
-authController :: RESTController
-authController = do
-  REST.index $ do
-    sid <- queryParam "chanId"
-    let str = S8.unpack $ fromJust sid  -- chanId id as a string
-    let chanId = read str -- chanId id as an ObjectId
-    mchannel <- liftLIO . withHircPolicy $
-      findWhere $ select ["_id" -: chanId] "channels"
-      case mchannel of
-        Just channel -> do
-          respondHtml "Authenticate" $ reqPwd channel
-          return $ redirectTo "/" ++ str ++ "/chats"
-        _ -> return notFound
--}
 

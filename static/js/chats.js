@@ -24,6 +24,7 @@ $(document).ready(function() {
 
   $("#chatForm").submit(function() {
     var dataString = $("#chatForm").serialize();
+    var text = $("#text").val();
     if ((text != '') && (text != null) && (text != "undefined")) {
       $.ajax({
         dataType: "json",
@@ -31,8 +32,7 @@ $(document).ready(function() {
         url: "",
         data: dataString,
         success: function(data) {
-          var array = data;
-          var newchat = array[array.length - 1];
+          var newchat = data[data.length - 1];
           $("#text").val("");
           poll();
           return data;
@@ -41,6 +41,37 @@ $(document).ready(function() {
     }
     return false;
   });
+
+/*
+  $("#chanForm").submit(function() {
+    alert("chan form submitted");
+    var dataString = $("#chanForm").serialize();
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: "/channels",
+      data: dataString,
+      success: function(data) {
+        console.log("success function called");
+        var newchan = data[data.length - 1];
+        var cid = newchan._id;
+        console.log("id of new channel: " + cid);
+        var notice = "Your channel will be located at: localhost:8080/" + cid + "/chats";
+        if (newchan.listed == "False") {
+          notice = notice + "\nCopy and paste this link and give it to the people who you are inviting to join your chat room."
+        }
+        alert(notice);
+        return data;
+      },
+    });
+    return true;
+  });
+*/
+
+  $(window).unload(function() {
+    // do something
+  });
+
 });
 
 

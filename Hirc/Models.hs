@@ -54,28 +54,40 @@ instance DCRecord Chat where
 
   recordCollection _ = "chats"
 
-
 data Channel = Channel
-    { channelId       :: Maybe ObjectId
-    , channelName     :: String
-    , channelPassword :: Maybe String
+    { channelId     :: Maybe ObjectId
+    , channelName   :: String
+    , channelAdmin  :: UserName
+    , channelListed :: String
     } deriving Show
 
 instance DCRecord Channel where
   fromDocument doc = trace "fromDoc" $ do
     let cid = lookupObjId "_id" doc
     name <- lookup "name" doc
-    pwd <- lookup "pwd" doc
-    return Channel { channelId       = cid
-                   , channelName     = name
-                   , channelPassword = pwd }
+    admin <- lookup "admin" doc
+    listed <- lookup "listed" doc
+    return Channel { channelId     = cid
+                   , channelName   = name
+                   , channelAdmin  = admin
+                   , channelListed = listed }
 
   toDocument c = trace "toDoc" $
-    [ "_id"     -: channelId c
-    , "name"    -: channelName c
-    , "pwd"     -: channelPassword c ]
+    [ "_id"    -: channelId c
+    , "name"   -: channelName c
+    , "admin"  -: channelAdmin c
+    , "listed" -: channelListed c ]
 
   recordCollection _ = "channels"
+
+instance ToJSON Channel where
+  toJSON (Channel i n a l) = 
+    object [ "_id"    .= (show $ fromJust i)
+           , "name"   .= n
+           , "admin"  .= a
+           , "listed" .= l
+           ]
+
 
 lookupObjId :: Monad m => FieldName -> HsonDocument -> m ObjectId
 lookupObjId n d = case lookup n d of

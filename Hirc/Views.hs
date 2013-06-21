@@ -31,42 +31,65 @@ import           Text.Regex
 import		 Hirc.Models
 
 
-indexChannels :: [Channel] -> Html
-indexChannels channels = do
+indexChannels :: [Channel] -> UserName -> Html
+indexChannels channels username = do
   h1 $ "Channels"
   li $ a ! href "/channels/new" $ "New Channel"
   ul $ do
     forM_ channels $ \chan -> do
-      let cid = show $ fromJust $ channelId chan
-      let link = toValue ("/" ++ cid ++ "/chats")
-      li $ a ! href link $ toHtml $ channelName chan
+      if ((channelListed chan) == False) 
+        then if ((channelAdmin chan) == username)
+               then showChannel chan True
+               else ""
+        else showChannel chan False
 
-newChannel :: Html
-newChannel = do
-  let pwdExp = "If you enter a password, only those with the password will be able to join your channel. Otherwise, your channel will be open to the public. Be sure to choose your password carefully, as it cannot be changed."
+showChannel :: Channel -> Bool -> Html
+showChannel chan private = do
+  let cid = show $ fromJust $ channelId chan
+  let link = toValue ("/" ++ cid ++ "/chats")
+  li $ a ! href link $ toHtml $
+    case private of
+      True -> toValue((channelName chan) ++ " (private)")
+      _ -> toValue $ channelName chan
+
+newChannel :: UserName -> Html
+newChannel username = do
+  {-
+  let listedExp  = toHtml("Yes, put my channel on the hIRC channel " ++
+                          "listings page so that anyone can join " ++
+                          "my channel.")
+  let ulistedExp = toHtml("No, don't list my channel; " ++ 
+                          "I'll only share the channel's URL with " ++ 
+                          "the people who I invite to join my channel.")
+  -}
+  let listedExp = "Yes, put my channel on the hIRC channel listings page so that anyone can join my channel." :: String
+  let ulistedExp = "No, don't list my channel; I'll only share the channel's URL with the people who I invite to join my channel." :: String
   h3 $ "Create a new channel"
-  form ! action "/channels" ! method "POST" $ do
+  form ! id "chanForm" ! action "/channels" ! method "POST" $ do
+    input ! type_ "hidden" ! name "admin" ! value (toValue username)
     div $ do
       label ! for "name" $ "Channel name:"
       input ! type_ "text" ! name "name" ! id "name"
     div $ do
-      label ! for "pwd" $ "Password (optional)"
-      input ! type_ "text" ! name "pwd" ! id "pwd"
-      p ! id "pwdexp" $ pwdExp  -- todo: make this gray in css
+      label ! for "listed" $ "Listed?"
+      input ! type_ "radio" ! name "listed" ! value "True" 
+      toHtml listedExp
+      input ! type_ "radio" ! name "listed" ! value "False" 
+      toHtml ulistedExp
     p $ input ! type_ "submit" ! value "Create"
 
 showChatPage :: [Chat] -> UserName -> Channel -> Html
 showChatPage chats user channel = trace "showChatPage" $ do
   let chanId = fromJust $ channelId channel
-  li ! id "username" $ toHtml user
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   --script ! src "/static/js/chats.js" $ ""
-  --todo: add a script to append usernames to list of usernames
-  trace "loaded scripts" $ do
-    div ! id "chats" $ "" -- chats.js will index all chats
-    newChat user chanId -- show form for making new chat
+  --div ! class_ "hidden" ! id "bookmark" $ 
+  div ! id "chats" $ "" -- chats.js will index all chats
+  script $ toHtml("$('#chats').append('" ++ (T.unpack user) ++ " has joined.');")
+  newChat user chanId -- show form for making new chat
 
+{-
 reqPwd :: Channel -> Html
 reqPwd channel = do
   let mpwd = channelPassword channel
@@ -80,6 +103,7 @@ reqPwd channel = do
         p $ input ! type_ "submit" ! value "Enter"
       script $ toHtml ("var pwd = " ++ pwd)
       script ! src "/static/js/auth.js" $ ""
+-}
 
 newChat :: UserName -> B.ObjectId -> Html
 newChat username chanId = trace "newChats" $ do
