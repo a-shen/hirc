@@ -80,6 +80,17 @@ chatsController = do
     liftLIO . withHircPolicy $ insert "chats" ldoc
     listChats usr
 
+  REST.update $ withAuthUser $ const $ do
+    let ctype = "text/json"
+        respJSON403 msg = Response status403 [(hContentType, ctype)] $
+                           L8.pack $ "{ \"error\" : " ++
+                                       show (msg :: String) ++ "}"
+    ldoc <- request >>= labeledRequestToHson
+    liftLIO . withHircPolicy $ do
+      lrec <- fromLabeledDocument ldoc
+      saveLabeledRecord (lrec :: DCLabeled Channel)
+    index
+
 listChats usr = trace "listChats" $ do
   sid <- queryParam "chanId"
   let str = S8.unpack $ fromJust sid  -- chanId id as a string
@@ -87,7 +98,10 @@ listChats usr = trace "listChats" $ do
   allChats <- liftLIO . withHircPolicy $ findAll $ select [] "chats"
   let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
   let cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
-  let chats = filter (\c -> (chatAssocChan c) == chanId) allChats --todo
+  let len = length chats
+  let chats = if len <= 100
+                then chats
+                else drop (len - 100) chats -- show first 100 chats on page
   trace ("found chats: " ++ (show chats)) $ do
     mchannel <- liftLIO . withHircPolicy $
       findWhere $ select ["_id" -: chanId] "channels"

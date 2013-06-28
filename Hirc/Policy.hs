@@ -26,7 +26,6 @@ import           Control.Monad
 import           LIO
 import           LIO.DCLabel
 import           LIO.DCLabel.Core
-import           LIO.DCLabel.Privs.TCB (allPrivTCB)
 import           LIO.TCB
 
 import           Hails.Data.Hson
