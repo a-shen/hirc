@@ -5,7 +5,6 @@
            , OverloadedStrings #-}
 module Hirc.Policy ( HircPolicy
                    , withHircPolicy
-                   , findAll, findAllP
                    ) where
 
 import           Prelude hiding (lookup)
@@ -25,7 +24,7 @@ import           Control.Monad
 
 import           LIO
 import           LIO.DCLabel
-import           LIO.DCLabel.Core
+--import           LIO.DCLabel.Core
 import           LIO.TCB
 
 import           Hails.Data.Hson
@@ -48,45 +47,42 @@ instance PolicyModule HircPolicy where
    initPolicyModule priv = do
      setPolicy priv $ do
        database $ do
-         readers ==> anybody
-         writers ==> anybody
-         --admins  ==> this
-         admins  ==> anybody
+         readers ==> unrestricted
+         writers ==> unrestricted
+         admins  ==> this
        collection "channels" $ do
          access $ do
-           readers ==> anybody
-           writers ==> anybody
+           readers ==> unrestricted
+           writers ==> unrestricted
          clearance $ do
-           --secrecy   ==> this
-           secrecy   ==> anybody
-           integrity ==> anybody
+           secrecy   ==> this
+           integrity ==> unrestricted
          document $ \doc -> do
-           --let (Just u) = fromDocument doc
-           readers ==> anybody
-           writers ==> anybody
+           readers ==> unrestricted
+           writers ==> unrestricted
        collection "chats" $ do
          access $ do
-           readers ==> anybody
-           writers ==> anybody
+           readers ==> unrestricted
+           writers ==> unrestricted
          clearance $ do
-           --secrecy   ==> this
-           secrecy   ==> anybody
-           integrity ==> anybody
+           secrecy   ==> this
+           integrity ==> unrestricted
          document $ \doc -> do
-           --let (Just u) = fromDocument doc
-           readers ==> anybody
-           writers ==> anybody
+           readers ==> unrestricted
+           writers ==> unrestricted
      return $ HircPolicyTCB priv
        where this = privDesc priv
              root = principal "root"
 
 instance DCLabeledRecord HircPolicy Chat where
-  endorseInstance _ = HircPolicyTCB noPriv
+  endorseInstance _ = HircPolicyTCB $ PrivTCB $ toCNF True
 
 instance DCLabeledRecord HircPolicy Channel where
-  endorseInstance _ = HircPolicyTCB noPriv
+  endorseInstance _ = HircPolicyTCB $ PrivTCB $ toCNF True
 
 withHircPolicy :: DBAction a -> DC a
-withHircPolicy act = withPolicyModule $
-  \(HircPolicyTCB noPrivs) -> act
+withHircPolicy act = withPolicyModule (\(_ :: HircPolicy) -> act)
+
+--withHircPolicy act = withPolicyModule $
+  -- \(HircPolicyTCB noPrivs) -> act
 

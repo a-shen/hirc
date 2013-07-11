@@ -50,10 +50,10 @@ channelsController = do
     chans <- liftLIO . withHircPolicy $ trace "here" $ 
       findAll $ select [] "channels"
     trace ("channels: " ++ (show chans)) $
-      return . respondHtml "Channels" $ indexChannels chans
+      return . respondHtml "Channels" $ indexChannels chans usr
 
   REST.new $ withUserOrDoAuth $ \usr -> trace "channels.new" $ do
-    return $ respondHtml "New Channel" $ newChannel
+    return $ respondHtml "New Channel" $ newChannel usr
     
   REST.create $ withUserOrDoAuth $ \usr -> trace "channels.create" $ do
     let ctype = "text/json"
@@ -62,6 +62,17 @@ channelsController = do
                                        show (msg :: String) ++ "}"
     ldoc <- request >>= labeledRequestToHson
     liftLIO . withHircPolicy $ insert "channels" ldoc
+    return $ redirectTo "/channels"
+
+  REST.update $ withUserOrDoAuth $ const $ do
+    let ctype = "text/json"
+        respJSON403 msg = Response status403 [(hContentType, ctype)] $
+                           L8.pack $ "{ \"error\" : " ++
+                                       show (msg :: String) ++ "}"
+    ldoc <- request >>= labeledRequestToHson
+    liftLIO . withHircPolicy $ do
+      lrec <- fromLabeledDocument ldoc
+      saveLabeledRecord (lrec :: DCLabeled Channel)
     return $ redirectTo "/channels"
  
    
@@ -80,39 +91,30 @@ chatsController = do
     liftLIO . withHircPolicy $ insert "chats" ldoc
     listChats usr
 
-  REST.update $ withAuthUser $ const $ do
-    let ctype = "text/json"
-        respJSON403 msg = Response status403 [(hContentType, ctype)] $
-                           L8.pack $ "{ \"error\" : " ++
-                                       show (msg :: String) ++ "}"
-    ldoc <- request >>= labeledRequestToHson
-    liftLIO . withHircPolicy $ do
-      lrec <- fromLabeledDocument ldoc
-      saveLabeledRecord (lrec :: DCLabeled Channel)
-    index
-
 listChats usr = trace "listChats" $ do
   sid <- queryParam "chanId"
   let str = S8.unpack $ fromJust sid  -- chanId id as a string
   let chanId = read (S8.unpack $ fromJust sid) :: ObjectId
   allChats <- liftLIO . withHircPolicy $ findAll $ select [] "chats"
-  let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
-  let cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
-  let len = length chats
-  let chats = if len <= 100
-                then chats
-                else drop (len - 100) chats -- show first 100 chats on page
-  trace ("found chats: " ++ (show chats)) $ do
-    mchannel <- liftLIO . withHircPolicy $
-      findWhere $ select ["_id" -: chanId] "channels"
-    case mchannel of
-      Just channel -> do
-        let cname = toHtml $ channelName channel
-        trace ("channel: " ++ (channelName $ fromJust mchannel)) $ do
-          matype <- requestHeader "accept"
-          case matype of
-            Just atype |  "application/json" `S8.isInfixOf` atype ->
-              return $ ok "application/json" (encode $ toJSON chats)
-            _ -> return $ respondHtml cname $ showChatPage chats usr channel
-      _ -> return notFound
+  trace ("found allChats") $ do
+    let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
+    let cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
+    let len = trace ("cchats: " ++ (show cchats)) $ length cchats
+    let maxchats = 10
+    let chats = if len <= maxchats
+                  then cchats
+                  else drop (len - maxchats) cchats -- show first (maxchats) chats on page
+    trace ("filtered chats: " ++ (show (chats :: [Chat]))) $ do
+      mchannel <- liftLIO . withHircPolicy $
+        findWhere $ select ["_id" -: chanId] "channels"
+      case mchannel of
+        Just channel -> do
+          let cname = toHtml $ channelName channel
+          trace ("channel: " ++ (channelName $ fromJust mchannel)) $ do
+            matype <- requestHeader "accept"
+            case matype of
+              Just atype |  "application/json" `S8.isInfixOf` atype ->
+                return $ ok "application/json" (encode $ toJSON (chats :: [Chat]))
+              _ -> return $ respondHtml cname $ showChatPage chats usr channel
+        _ -> return notFound
 

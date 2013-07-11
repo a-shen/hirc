@@ -75,7 +75,7 @@ showChatPage chats user channel = trace "showChatPage" $ do
   let chanId = fromJust $ channelId channel
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  --script ! src "/static/js/chats.js" $ ""
+  script ! src "/static/js/chats.js" $ ""
   div ! id "users" $ "" -- list of users, which chats.js will update dynamically
   div ! id "chats" $ "" -- chats.js will index all chats
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ show user
