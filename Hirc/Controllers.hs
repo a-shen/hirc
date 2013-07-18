@@ -42,7 +42,6 @@ server = mkRouter $ do
   routeName "channels" channelsController
   routeVar "chanId" $ do
     routeName "chats" chatsController
-    --routeName "auth" authController
 
 channelsController :: RESTController
 channelsController = do
@@ -54,7 +53,7 @@ channelsController = do
 
   REST.new $ withUserOrDoAuth $ \usr -> trace "channels.new" $ do
     return $ respondHtml "New Channel" $ newChannel usr
-    
+
   REST.create $ withUserOrDoAuth $ \usr -> trace "channels.create" $ do
     let ctype = "text/json"
         respJSON403 msg = Response status403 [(hContentType, ctype)] $
@@ -64,6 +63,10 @@ channelsController = do
     liftLIO . withHircPolicy $ insert "channels" ldoc
     return $ redirectTo "/channels"
 
+  REST.edit $ withUserOrDoAuth $ \usr -> trace "channels.edit" $ do
+    sid <- queryParam "chanId"
+    return $ respondHtml "Edit Channel" $ newChannel usr
+    
   REST.update $ withUserOrDoAuth $ const $ do
     let ctype = "text/json"
         respJSON403 msg = Response status403 [(hContentType, ctype)] $
@@ -93,7 +96,7 @@ chatsController = do
 
 listChats usr = trace "listChats" $ do
   sid <- queryParam "chanId"
-  let str = S8.unpack $ fromJust sid  -- chanId id as a string
+  let str = S8.unpack $ fromJust sid  -- chanId as a string
   let chanId = read (S8.unpack $ fromJust sid) :: ObjectId
   allChats <- liftLIO . withHircPolicy $ findAll $ select [] "chats"
   trace ("found allChats") $ do

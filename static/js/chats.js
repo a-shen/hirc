@@ -15,11 +15,14 @@ $(document).ready(function() {
         success: function(data) {
           console.log(data);
           var firstChat = nchats; // number of first chat
+          console.log("firstChat: " + firstChat);
           for (var n = nchats; n < data.length; n++) {
             $("#chats").append(showChat(data[n], n));
           }
           nchats = data.length;
-          var extras = nchats - 100; // number of chats to delete to display 100
+          var maxchats = 10;
+          var extras = nchats - maxchats; // number of chats to delete to display maxchats
+          console.log("nchats: " + nchats + "; extras: " + extras + "; firstChat: " + firstChat);
           if (extras > 0) {
             for (var i = 0; i < extras; i++) {
               $("#"+ (i + firstChat)).remove();

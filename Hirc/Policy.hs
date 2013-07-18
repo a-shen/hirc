@@ -60,6 +60,7 @@ instance PolicyModule HircPolicy where
          document $ \doc -> do
            readers ==> unrestricted
            writers ==> unrestricted
+         field "listed" key
        collection "chats" $ do
          access $ do
            readers ==> unrestricted
