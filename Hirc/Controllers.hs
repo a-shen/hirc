@@ -103,7 +103,7 @@ listChats usr = trace "listChats" $ do
     let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
     let cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
     let len = trace ("cchats: " ++ (show cchats)) $ length cchats
-    let maxchats = 10
+    let maxchats = 100
     let chats = if len <= maxchats
                   then cchats
                   else drop (len - maxchats) cchats -- show first (maxchats) chats on page

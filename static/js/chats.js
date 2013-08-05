@@ -3,32 +3,40 @@ $(document).ready(function() {
 
   // update user list to include new user
   var cuser = $("#currentUser").text();
-  var userHtml = $('<div id="' + cuser + '">' + cuser + '</div>').appendTo("#users");
+  var userHtml = '<div id="' + cuser + '">' + cuser + '</div>';
   $("#users").append(userHtml);
+  $("#users").append("hi i'm a new user");
+  console.log("user should've been appended");
 
-  var nchats = 0; // number of chats currently indexed on the page
+  var last_id = "";  // id of the last chat on the page
 
   function poll() {
     setTimeout(function() {
       $.ajax({
         url: document.URL,
         success: function(data) {
-          console.log(data);
-          var firstChat = nchats; // number of first chat
-          console.log("firstChat: " + firstChat);
-          for (var n = nchats; n < data.length; n++) {
-            $("#chats").append(showChat(data[n], n));
-          }
-          nchats = data.length;
-          var maxchats = 10;
-          var extras = nchats - maxchats; // number of chats to delete to display maxchats
-          console.log("nchats: " + nchats + "; extras: " + extras + "; firstChat: " + firstChat);
-          if (extras > 0) {
-            for (var i = 0; i < extras; i++) {
-              $("#"+ (i + firstChat)).remove();
+          console.log("last_id = " + last_id);
+          console.log("data: " + logData(data));
+          var newind = 0;  // index of the first new chat
+          for (var n = 0; n < data.length; n++) {
+            console.log("cur id: " + data[n]._id);
+            if (data[n]._id == last_id) {  // just found the last chat indexed on the page
+              newind = n + 1;
+              console.log("found newind: " + newind);
+              break;
             }
           }
-          console.log("nchats: " + nchats);
+          for (var n = newind; n < data.length; n++) {
+            console.log("appending chat: " + data[n]);
+            $("#chats").append(showChat(data[n], n));
+            var allchats = $(".chat");
+            var maxchats = 100;  // todo change to 100
+            if (allchats.length > maxchats) {
+              // remove one chat from the top to maintain a consistent number of chats on the page
+              $(".chat").get(0).remove();
+            }
+          }
+          last_id = data[data.length - 1]._id;
           poll();
         },
         dataType: "json"
@@ -74,7 +82,7 @@ function showChat(chat, number) {  // number = which chat it is (#1, 2, 3, ...)
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
   var html =
-  $('<p id="' + number + '">' + "<" + date + ">" + '<b>' + chat.author + ": " + '</b>' + 
+  $('<p class="chat" id="' + number + '">' + "<" + date + ">" + '<b>' + chat.author + ": " + '</b>' +
     chat.text + '</p>').appendTo("#chats");
 }
 
@@ -93,5 +101,14 @@ function addZero(n) { // to match the haskell format
     n = "0" + n;
   }
   return n;
+}
+
+function logData(array) { // for debugging purposes
+  var str = "";
+  for (var i = 0; i < array.length; i++) {
+    // str += array[i].text + " ";
+    str += array[i]._id + " ";
+  }
+  return str;
 }
 

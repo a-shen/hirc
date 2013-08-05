@@ -75,8 +75,8 @@ showChatPage chats user channel = trace "showChatPage" $ do
   let chanId = fromJust $ channelId channel
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
-  --script ! src "/static/js/chats.js" $ ""
-  div ! id "users" $ "" -- list of users, which chats.js will update dynamically
+  script ! src "/static/js/chats.js" $ ""
+  div ! id "users" $ p $ "People in chat room:" -- list of users, which chats.js will update dynamically
   div ! id "chats" $ "" -- chats.js will index all chats
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ show user
   --script $ toHtml("$('#chats').append('" ++ (T.unpack user) ++ " has joined.');")
@@ -106,7 +106,6 @@ respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
     script ! src "/static/js/jquery.min.js" $ ""
     script ! src "/static/js/jquery.cookie.js" $ ""
     script ! src "/static/js/bootstrap.min.js" $ ""
-    script ! src "https://login.persona.org/include.js" $ ""
     script ! src "/static/js/application.js" $ ""
   body $ do
     script ! src "/static/js/jquery.js" $ ""
