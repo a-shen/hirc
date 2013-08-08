@@ -71,6 +71,17 @@ instance PolicyModule HircPolicy where
          document $ \doc -> do
            readers ==> unrestricted
            writers ==> unrestricted
+       collection "users" $ do
+         access $ do
+           readers ==> unrestricted
+           writers ==> unrestricted
+         clearance $ do
+           secrecy   ==> this
+           integrity ==> unrestricted
+         document $ \doc -> do
+           readers ==> unrestricted
+           writers ==> unrestricted
+         field "name" key
      return $ HircPolicyTCB priv
        where this = privDesc priv
              root = principal "root"

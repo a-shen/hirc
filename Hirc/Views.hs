@@ -59,6 +59,7 @@ newChannel username = do
   h3 $ "Create a new channel"
   form ! id "chanForm" ! action "/channels" ! method "POST" $ do
     input ! type_ "hidden" ! name "admin" ! value (toValue username)
+    input ! type_ "hidden" ! name "mems[]"
     div $ do
       label ! for "name" $ "Channel name:"
       input ! type_ "text" ! name "name" ! id "name"
@@ -66,17 +67,21 @@ newChannel username = do
       label ! for "listed" $ "Listed?"
       input ! type_ "radio" ! name "listed" ! value "True" 
       toHtml listedExp
+      br
       input ! type_ "radio" ! name "listed" ! value "False" 
       toHtml ulistedExp
     p $ input ! type_ "submit" ! value "Create"
 
-showChatPage :: [Chat] -> UserName -> Channel -> Html
-showChatPage chats user channel = trace "showChatPage" $ do
+showChatPage :: [Chat] -> UserName -> Channel -> [String] -> Html
+showChatPage chats user channel allusers = trace "showChatPage" $ do
   let chanId = fromJust $ channelId channel
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   script ! src "/static/js/chats.js" $ ""
-  div ! id "users" $ p $ "People in chat room:" -- list of users, which chats.js will update dynamically
+  div ! id "users" $ do
+    p $ "People in chat room:" -- list of users, which chats.js will update dynamically
+    forM_ allusers $ \u -> do
+      div ! id (toValue u) $ toHtml u
   div ! id "chats" $ "" -- chats.js will index all chats
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ show user
   --script $ toHtml("$('#chats').append('" ++ (T.unpack user) ++ " has joined.');")
@@ -91,7 +96,7 @@ newChat username chanId = trace "newChats" $ do
     input ! type_ "hidden" ! name "chan" ! id "chan" ! value cid
     div $ do
       input ! type_ "text" ! name "text" ! id "text"
-    p $ input ! type_ "submit" ! class_ "chatsub" ! value "Post"
+    p $ input ! type_ "submit" ! class_ "hidden" ! value "Post"
 
 pdt :: TimeZone
 pdt = TimeZone { timeZoneMinutes = -420,

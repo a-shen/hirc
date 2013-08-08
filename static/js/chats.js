@@ -28,7 +28,7 @@ $(document).ready(function() {
           }
           for (var n = newind; n < data.length; n++) {
             console.log("appending chat: " + data[n]);
-            $("#chats").append(showChat(data[n], n));
+            $("#chats").append(showChat(data[n]));
             var allchats = $(".chat");
             var maxchats = 100;  // todo change to 100
             if (allchats.length > maxchats) {
@@ -77,12 +77,12 @@ $(document).ready(function() {
 /**
 Returns the formatted chat ready to be appended to the chats div
 */
-function showChat(chat, number) {  // number = which chat it is (#1, 2, 3, ...)
+function showChat(chat) {
   var cid = chat._id;
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
   var html =
-  $('<p class="chat" id="' + number + '">' + "<" + date + ">" + '<b>' + chat.author + ": " + '</b>' +
+  $('<p class="chat">' + date + '&nbsp' + '<b>' + chat.author + ": " + '</b>' +
     chat.text + '</p>').appendTo("#chats");
 }
 

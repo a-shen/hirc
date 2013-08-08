@@ -50,6 +50,10 @@ h6 {
   visibility:hidden;
 }
 
+.hidden {
+display:none;
+}
+
 p {
   line-height:120%;
   font-family: "Roboto", sans-serif;
@@ -107,4 +111,3 @@ input[type=submit]:active {
   position:relative;
   top:1px;
 }
-
