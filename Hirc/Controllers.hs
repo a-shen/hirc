@@ -53,8 +53,7 @@ server = mkRouter $ do
 
   F.get "/channels/new" $ withUserOrDoAuth $ \usr -> do
     liftLIO $ withHircPolicy $ checkUser usr
-    allusers <- liftLIO $ withHircPolicy $ findAllUsers $ select [] "users"
-    return $ respondHtml "New Channel" $ newChannel usr allusers
+    return $ respondHtml "New Channel" $ newChannel usr
 
   F.post "/channels" $ withUserOrDoAuth $ \usr -> do
     ldoc <- request >>= labeledRequestToHson
@@ -73,8 +72,7 @@ server = mkRouter $ do
     mchan <- liftLIO $ withHircPolicy $ findWhere $ select ["_id" -: cid] "channels"
     case mchan of
       Just chan -> do
-        allusers <- liftLIO $ withHircPolicy $ findAllUsers $ select [] "users"
-        return $ respondHtml "Edit Channel" $ editChannel usr chan allusers
+        return $ respondHtml "Edit Channel" $ editChannel usr chan
       _ -> return $ notFound
     
   F.post "/channels/edit" $ withUserOrDoAuth $ \usr -> trace "post channels/edit" $ do
@@ -83,7 +81,7 @@ server = mkRouter $ do
     let admins = map T.pack $ splitOn ("," :: String) ("admins" `at` doc)
         id = read ("_id" `at` doc) :: ObjectId
         newdoc = merge [ "admins" -: (admins :: [UserName])
-                       , "_id"    -: id] 
+                       , "_id"    -: id ] 
                        doc
     liftLIO $ withHircPolicy $ trace "saving doc" $ save "channels" newdoc
     trace "saved doc" $ return $ redirectTo "/channels"
@@ -100,20 +98,6 @@ server = mkRouter $ do
       Just atype |  "application/json" `S8.isInfixOf` atype ->
         return $ ok "application/json" (encode $ toJSON users)
       _ -> return $ okHtml ""
-
-  -- Add user to the channel's member list. Username is the "user" field in the form.
-  F.post "/:chanid/adduser" $ do
-    (Just sid) <- queryParam "chanid"
-    let cid = read (S8.unpack sid) :: ObjectId
-    mlcdoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: cid] "channels"
-    cdoc <- liftLIO $ unlabel $ fromJust mlcdoc
-    reqdoc <- request >>= labeledRequestToHson >>= (liftLIO . unlabel)
-    trace ("reqdoc: " ++ show reqdoc) $ return ()
-    let newmem = ("user" `at` reqdoc) :: UserName
-    let newmems = joinList newmem ("mems" `at` cdoc)
-    let newdoc = merge ["mems" -: newmems] cdoc
-    liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
-    trace "saved channel doc" $ return $ redirectTo "/channels"
  
   -- Remove user from the channel's member list. Username is the "user" field in the form.
   F.post "/:chanid/remuser" $ trace "REMOVE USER CALLED" $ do
@@ -124,6 +108,8 @@ server = mkRouter $ do
     reqdoc <- request >>= labeledRequestToHson >>= (liftLIO . unlabel)
     trace ("reqdoc: " ++ show reqdoc) $ return ()
     let curmem = ("user" `at` reqdoc) :: UserName
+    --mcurmem <- getHailsUser
+    --let curmem = fromJust mcurmem
     let newmems = delete curmem ("mems" `at` cdoc)
     let newdoc = merge ["mems" -: newmems] cdoc
     liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
@@ -146,7 +132,6 @@ listChats usr = trace "listChats" $ do
   let str = S8.unpack sid  -- chanId as a string
       chanId = read (S8.unpack sid) :: ObjectId
   allChats <- liftLIO . withHircPolicy $ findAll $ select [] "chats"
-  users <- liftLIO . withHircPolicy $ findAllUsers $ select [] "users"
   let sorted = sortBy (comparing (timestamp . fromJust . chatId)) allChats
       cchats = filter (\c -> (chatAssocChan c) == chanId) allChats
       len = length cchats
@@ -155,17 +140,21 @@ listChats usr = trace "listChats" $ do
                 then cchats
                 else drop (len - maxchats) cchats -- show first (maxchats) chats on page
   --trace ("filtered chats: " ++ (show (chats :: [Chat]))) $ do
-  mchannel <- liftLIO . withHircPolicy $
-    findWhere $ select ["_id" -: chanId] "channels"
-  case mchannel of
-    Just channel -> do
-      let cname = toHtml $ channelName channel
-      trace ("channel: " ++ (channelName $ fromJust mchannel)) $ do
-        matype <- requestHeader "accept"
-        case matype of
-          Just atype |  "application/json" `S8.isInfixOf` atype ->
-            return $ ok "application/json" (encode $ toJSON (chats :: [Chat]))
-          _ -> return $ respondHtml cname $ showChatPage chats usr channel $ map T.unpack users
+  mlchandoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: chanId] "channels"
+  case mlchandoc of
+    Just lchandoc -> do
+      chandoc <- liftLIO $ unlabel lchandoc
+      channel <- fromDocument chandoc
+      let newmems = joinList usr $ channelMems channel
+          newdoc = merge ["mems" -: newmems] chandoc
+      liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc -- add current user to the list of channel members
+      matype <- requestHeader "accept"
+      case matype of
+        Just atype |  "application/json" `S8.isInfixOf` atype ->
+          return $ ok "application/json" (encode $ toJSON (chats :: [Chat]))
+        _ -> do
+          let cname = toHtml $ channelName channel
+          return $ respondHtml cname $ showChatPage chats usr channel
     _ -> return notFound
 
 checkUser :: UserName -> DBAction ()

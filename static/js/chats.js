@@ -1,26 +1,8 @@
 
 $(document).ready(function() {
 
-  $("#addMemForm").submit(function(e) {  // add new user to list of channel members
-    e.preventDefault();
-    var dataStr = $(this).serialize();
-    $.ajax({
-      dataType: "json",
-      type: "POST",
-      url: "adduser",
-      data: dataStr,
-      success: function(data) {
-        pollUsers();
-      },
-    });
-  });
-
-  $("#addMemForm").submit();
-
-  // document.getElementById('removeMemForm').submit();
-
-  pollChats();
   pollUsers();
+  pollChats();
 
   var last_id = "";  // id of the last chat on the page
 
@@ -44,16 +26,22 @@ $(document).ready(function() {
     return false;
   });
 
-  // $(window).unload(function() {  // user left, so remove their name from the list
-  // $(window).bind('beforeunload', function(e) {    
-  // $(window).bind('unload', function(e) {    
+  // Put a chat saying that this user has joined the chat room
+  var curuser = $("#currentUser").text();
+  $("#text").val(curuser + " has joined.");
+  $("#author").val("");
+  $("#chatForm").submit();
+  $("#text").val("");
+  $("#author").val(curuser);
+
   window.onbeforeunload = function() {
-    document.getElementById('removeMemForm').submit();
-    // $("#removeMemForm").submit();
-    console.log("Forms submitted");
-    return "Bye";
+    // Put a chat saying that this user has left
+    var curuser = $("#currentUser").text();
+    $("#text").val(curuser + " has left.");
+    $("#author").val("");
+    $("#chatForm").submit();
+    $("#removeMemForm").submit();
   };
-  //});
 
   function pollChats() {
     setTimeout(function() {
@@ -121,9 +109,15 @@ function showChat(chat) {
   var cid = chat._id;
   var timestamp = cid.toString().substring(0,8);
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
-  var html =
-  $('<p class="chat">' + date + '&nbsp' + '<b>' + chat.author + ": " + '</b>' +
-    chat.text + '</p>').appendTo("#chats");
+  var html = "";
+  if (chat.author.length != 0) {  // it's a normal chat
+    html = '<p class="chat">' + date + " " + 
+           '<b>' + chat.author + ": " + '</b>' + chat.text + '</p>';
+  } else {  // admin message
+    console.log("admin message!");
+    html = '<p class="specialmsg">' + date + " " + chat.text + '</p>';
+  }
+  return html;
 }
 
 /**

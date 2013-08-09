@@ -42,16 +42,16 @@ h5 {
   display:block;
 }
 
-.chatsub {
-  display:none;
-}
-
-h6 {
-  visibility:hidden;
+.specialmsg {
+color:blue;
 }
 
 .hidden {
 display:none;
+}
+
+#newchatbttn, #chatForm {
+display:inline;
 }
 
 p {

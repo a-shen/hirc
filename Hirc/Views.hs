@@ -49,20 +49,20 @@ indexChannels channels username = trace "indexChannels" $ do
               li $ a ! href (toValue link) $ toHtml ((channelName chan) ++ " (private)")
             else ""
 
-newChannel :: UserName -> [UserName] -> Html
-newChannel username allusers = do
+newChannel :: UserName -> Html
+newChannel username = do
   h3 $ "Create a new channel"
   form ! id "chanForm" ! action "/channels" ! method "POST" $ 
-    formChannel username Nothing allusers
+    formChannel username Nothing
 
-editChannel :: UserName -> Channel -> [UserName] -> Html
-editChannel username chan allusers = do
+editChannel :: UserName -> Channel -> Html
+editChannel username chan = do
   h3 $ "Edit your channel"
   form ! id "chanForm" ! action "/channels/edit" ! method "POST" $ 
-    formChannel username (Just chan) allusers
+    formChannel username (Just chan)
 
-formChannel :: UserName -> Maybe Channel -> [UserName] -> Html
-formChannel username mchan allusers = do
+formChannel :: UserName -> Maybe Channel -> Html
+formChannel username mchan = do
   let listedExp = ("Yes, put my channel on the hIRC channel listings page " ++ 
                   "so that anyone can join my channel.") :: String
   let ulistedExp = ("No, don't list my channel; I'll only share my channel's " ++ 
@@ -97,8 +97,8 @@ formChannel username mchan allusers = do
     toHtml ulistedExp
   p $ input ! type_ "submit" ! value "Create"
 
-showChatPage :: [Chat] -> UserName -> Channel -> [String] -> Html
-showChatPage chats user chan allusers = trace "showChatPage" $ do
+showChatPage :: [Chat] -> UserName -> Channel -> Html
+showChatPage chats user chan = trace "showChatPage" $ do
   script ! src "http://ajax.googleapis.com/ajax/libs/jquery/1.7/jquery.js" $ ""
   script ! src "http://code.jquery.com/jquery-1.10.1.min.js" $ ""
   script ! src "/static/js/chats.js" $ ""
@@ -107,17 +107,13 @@ showChatPage chats user chan allusers = trace "showChatPage" $ do
   if (user `elem` channelAdmins chan)
     then p $ a ! href (toValue (url ++ "/edit")) $ "Edit Channel"
     else ""
-  form ! id "addMemForm" ! action (toValue (url ++ "/adduser")) ! method "POST" $ do
-    -- add this user to the channel's list of members; form will be submitted immediately by js
-    trace ("user: " ++ T.unpack user) $ ""
-    input ! type_ "hidden" ! name "user" ! value (toValue $ T.unpack user)
   form ! id "removeMemForm" ! action (toValue (url ++ "/remuser")) ! method "POST" $ do
     -- remove user from channel; form will be submitted when the user leaves the page
     input ! type_ "hidden" ! name "user" ! value (toValue $ T.unpack user)
   let chanId = fromJust $ channelId chan
   div ! id "users" $ "" -- chats.js will list users
   div ! id "chats" $ "" -- chats.js will index all chats
-  div ! id "currentUser" ! class_ "hidden" $ toHtml $ show user
+  div ! id "currentUser" ! class_ "hidden" $ toHtml $ T.unpack user
   --script $ toHtml("$('#chats').append('" ++ (T.unpack user) ++ " has joined.');")
   newChat user chanId -- show form for making new chat
 
@@ -130,7 +126,7 @@ newChat username chanId = trace "newChats" $ do
     input ! type_ "hidden" ! name "chan" ! id "chan" ! value cid
     div $ do
       input ! type_ "text" ! name "text" ! id "text"
-    p $ input ! type_ "submit" ! class_ "hidden" ! value "Post"
+    p $ input ! type_ "submit" ! id "newchatbttn" ! value "Post"
 
 pdt :: TimeZone
 pdt = TimeZone { timeZoneMinutes = -420,
