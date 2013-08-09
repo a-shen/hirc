@@ -57,29 +57,29 @@ instance DCRecord Chat where
 data Channel = Channel
     { channelId     :: Maybe ObjectId
     , channelName   :: String
-    , channelMems   :: [UserName]
-    , channelAdmin  :: UserName
+    , channelMems   :: [UserName]  -- who's currently in this chat room
+    , channelAdmins :: [UserName]
     , channelListed :: String
     } deriving Show
 
 instance DCRecord Channel where
-  fromDocument doc = trace "fromDoc" $ do
+  fromDocument doc = do
     let cid = lookupObjId "_id" doc
     name <- lookup "name" doc
     mems <- lookup "mems" doc
-    admin <- lookup "admin" doc
+    admins <- lookup "admins" doc
     listed <- lookup "listed" doc
     return Channel { channelId     = cid
                    , channelName   = name
                    , channelMems   = mems
-                   , channelAdmin  = admin
+                   , channelAdmins  = admins
                    , channelListed = listed }
 
   toDocument c = trace "toDoc" $
     [ "_id"    -: channelId c
     , "name"   -: channelName c
     , "mems"   -: channelMems c
-    , "admin"  -: channelAdmin c
+    , "admins" -: channelAdmins c
     , "listed" -: channelListed c ]
 
   recordCollection _ = "channels"
@@ -89,7 +89,7 @@ instance ToJSON Channel where
     object [ "_id"    .= (show $ fromJust i)
            , "name"   .= n
            , "mems"   .= m
-           , "admin"  .= a
+           , "admins" .= a
            , "listed" .= l
            ]
 

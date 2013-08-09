@@ -1,25 +1,69 @@
 
 $(document).ready(function() {
 
-  // update user list to include new user
-  var cuser = $("#currentUser").text();
-  var userHtml = '<div id="' + cuser + '">' + cuser + '</div>';
-  $("#users").append(userHtml);
-  $("#users").append("hi i'm a new user");
-  console.log("user should've been appended");
+  $("#addMemForm").submit(function(e) {  // add new user to list of channel members
+    e.preventDefault();
+    var dataStr = $(this).serialize();
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: "adduser",
+      data: dataStr,
+      success: function(data) {
+        pollUsers();
+      },
+    });
+  });
+
+  $("#addMemForm").submit();
+
+  // document.getElementById('removeMemForm').submit();
+
+  pollChats();
+  pollUsers();
 
   var last_id = "";  // id of the last chat on the page
 
-  function poll() {
+  $("#chatForm").submit(function() {
+    var dataString = $("#chatForm").serialize();
+    var text = $("#text").val();
+    if ((text != '') && (text != null) && (text != "undefined")) {
+      $.ajax({
+        dataType: "json",
+        type: "POST",
+        url: "",
+        data: dataString,
+        success: function(data) {
+          var newchat = data[data.length - 1];
+          $("#text").val("");
+          pollChats();
+          return data;
+        },
+      });
+    }
+    return false;
+  });
+
+  // $(window).unload(function() {  // user left, so remove their name from the list
+  // $(window).bind('beforeunload', function(e) {    
+  // $(window).bind('unload', function(e) {    
+  window.onbeforeunload = function() {
+    document.getElementById('removeMemForm').submit();
+    // $("#removeMemForm").submit();
+    console.log("Forms submitted");
+    return "Bye";
+  };
+  //});
+
+  function pollChats() {
     setTimeout(function() {
       $.ajax({
         url: document.URL,
         success: function(data) {
-          console.log("last_id = " + last_id);
           console.log("data: " + logData(data));
           var newind = 0;  // index of the first new chat
           for (var n = 0; n < data.length; n++) {
-            console.log("cur id: " + data[n]._id);
+            // console.log("cur id: " + data[n]._id);
             if (data[n]._id == last_id) {  // just found the last chat indexed on the page
               newind = n + 1;
               console.log("found newind: " + newind);
@@ -37,42 +81,38 @@ $(document).ready(function() {
             }
           }
           last_id = data[data.length - 1]._id;
-          poll();
+          pollChats();
         },
         dataType: "json"
       });
     }, 750);  // refresh every 0.75 sec
   }
 
-  poll();
-
-  $("#chatForm").submit(function() {
-    var dataString = $("#chatForm").serialize();
-    var text = $("#text").val();
-    if ((text != '') && (text != null) && (text != "undefined")) {
+  function pollUsers() {
+    console.log("pollUsers called");
+    setTimeout(function() {
+      var urlarr = document.URL.split("/");
+      console.log("url array: " + urlarr);
+      var dest = "/" + urlarr[3] + "/users" // destination url
       $.ajax({
-        dataType: "json",
-        type: "POST",
-        url: "",
-        data: dataString,
+        url: dest,
         success: function(data) {
-          var newchat = data[data.length - 1];
-          $("#text").val("");
-          poll();
-          return data;
+          console.log("users: " + data);
+          $("#users").empty();
+          var html = '<h3>Users in chat room:</h3><ul>'
+          for (var i = 0; i < data.length; i++) {
+            html += '<li>' + data[i] + '</li>'
+          }
+          html += '</ul>'
+          $("#users").append(html);
+          pollUsers();
         },
+        dataType: "json"
       });
-    }
-    return false;
-  });
-
-  $(window).unload(function() {  // user left, so remove their name from the list
-    console.log("removing cuser: " + cuser);
-    $("#"+cuser).remove();
-  });
+    }, 3000);  // refresh every 3 seconds
+  }
 
 });
-
 
 /**
 Returns the formatted chat ready to be appended to the chats div
