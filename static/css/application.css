@@ -11,6 +11,13 @@
   font-style: normal;
 }
 
+#users {
+  position:fixed;
+  width: 48.93617021276595%;
+  margin-left: 48.93617021276595%;
+}
+
+/*
 body {
   padding-top: 20px; 
   font-family: "Roboto", sans-serif;
@@ -25,7 +32,6 @@ ul {
 
 div {
   line-height:100%;
-  /*display: inline-block;*/
 }
 
 h3 {
@@ -41,6 +47,7 @@ h5 {
   font-weight:normal;
   display:block;
 }
+*/
 
 .specialmsg {
 color:blue;
@@ -54,6 +61,7 @@ display:none;
 display:inline;
 }
 
+/*
 p {
   line-height:120%;
   font-family: "Roboto", sans-serif;
@@ -111,3 +119,5 @@ input[type=submit]:active {
   position:relative;
   top:1px;
 }
+*/
+

@@ -34,7 +34,7 @@ import		     Hirc.Models
 indexChannels :: [Channel] -> UserName -> Html
 indexChannels channels username = trace "indexChannels" $ do
   h1 $ "Channels"
-  li $ a ! href "/channels/new" $ "New Channel"
+  a ! href "/channels/new" $ "New Channel"
   ul $ do
     forM_ channels $ \chan -> do
       case (channelListed chan) of
@@ -111,10 +111,10 @@ showChatPage chats user chan = trace "showChatPage" $ do
     -- remove user from channel; form will be submitted when the user leaves the page
     input ! type_ "hidden" ! name "user" ! value (toValue $ T.unpack user)
   let chanId = fromJust $ channelId chan
-  div ! id "users" $ "" -- chats.js will list users
-  div ! id "chats" $ "" -- chats.js will index all chats
+  div ! class_ "row-fluid" $ do
+    div ! id "chats" ! class_ "span6" $ "" -- chats.js will index all chats
+    div ! id "users" $ h3 $ "Users in chat room:" -- chats.js will list users
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ T.unpack user
-  --script $ toHtml("$('#chats').append('" ++ (T.unpack user) ++ " has joined.');")
   newChat user chanId -- show form for making new chat
 
 newChat :: UserName -> B.ObjectId -> Html
@@ -136,7 +136,8 @@ pdt = TimeZone { timeZoneMinutes = -420,
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
   head $ do
     title ctitle
-    stylesheet "/static/css/bootstrap.css"
+    --stylesheet "/static/css/bootstrap.css"
+    stylesheet "/static/css/bootstrap1.css"
     stylesheet "/static/css/application.css"
     script ! src "/static/js/jquery.min.js" $ ""
     script ! src "/static/js/jquery.cookie.js" $ ""

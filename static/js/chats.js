@@ -97,7 +97,7 @@ $(document).ready(function() {
         },
         dataType: "json"
       });
-    }, 3000);  // refresh every 3 seconds
+    }, 1000);  // refresh every second
   }
 
 });
@@ -111,7 +111,7 @@ function showChat(chat) {
   var date = formatDate(new Date(parseInt(timestamp, 16) * 1000));
   var html = "";
   if (chat.author.length != 0) {  // it's a normal chat
-    html = '<p class="chat">' + date + " " + 
+    html = '<p class="chat">' + date + " " +
            '<b>' + chat.author + ": " + '</b>' + chat.text + '</p>';
   } else {  // admin message
     console.log("admin message!");

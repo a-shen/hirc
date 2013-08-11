@@ -145,9 +145,12 @@ listChats usr = trace "listChats" $ do
     Just lchandoc -> do
       chandoc <- liftLIO $ unlabel lchandoc
       channel <- fromDocument chandoc
-      let newmems = joinList usr $ channelMems channel
-          newdoc = merge ["mems" -: newmems] chandoc
-      liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc -- add current user to the list of channel members
+      let curmems = channelMems channel
+      if usr `elem` curmems
+        then return ()
+        else do -- add current user to the list of channel members
+          let newdoc = merge [ "mems" -: (curmems ++ [usr]) ] chandoc
+          liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
       matype <- requestHeader "accept"
       case matype of
         Just atype |  "application/json" `S8.isInfixOf` atype ->
