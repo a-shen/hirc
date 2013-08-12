@@ -102,6 +102,20 @@ server = mkRouter $ do
         return $ ok "application/json" (encode $ toJSON users)
       _ -> return $ okHtml ""
  
+  -- Add user to the channel's member list. Username is the "user" field in the form.
+  F.post "/:chanid/adduser" $ do
+    (Just sid) <- queryParam "chanid"
+    let cid = read (S8.unpack sid) :: ObjectId
+    mlcdoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: cid] "channels"
+    cdoc <- liftLIO $ unlabel $ fromJust mlcdoc
+    reqdoc <- request >>= labeledRequestToHson >>= (liftLIO . unlabel)
+    trace ("reqdoc: " ++ show reqdoc) $ return ()
+    let newmem = ("user" `at` reqdoc) :: UserName
+    let newmems = joinList newmem ("mems" `at` cdoc)
+    let newdoc = merge ["mems" -: newmems] cdoc
+    liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
+    trace "saved channel doc" $ return $ redirectTo "/channels"
+
   -- Remove user from the channel's member list. Username is the "user" field in the form.
   F.post "/:chanId/remuser" $ trace "REMOVE USER CALLED" $ do
     (Just sid) <- queryParam "chanId"
@@ -118,14 +132,16 @@ server = mkRouter $ do
     liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
     trace "saved channel doc" $ return $ redirectTo "/channels"
     
+  -- Edit username
   F.post "/:chanId/edituser" $ withUserOrDoAuth $ \usr -> trace "post /edituser" $ do
     (Just sid) <- queryParam "chanId"
     let cid = read (S8.unpack sid) :: ObjectId
     mlcdoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: cid] "channels"
     cdoc <- liftLIO $ unlabel $ fromJust mlcdoc
     reqdoc <- request >>= labeledRequestToHson >>= (liftLIO . unlabel)
-    let newname = ("name" `at` reqdoc) :: UserName
-        newmems = replaceList usr newname ("mems" `at` cdoc)
+    let newname = ("newname" `at` reqdoc) :: UserName
+        oldname = ("oldname" `at` reqdoc) :: UserName
+        newmems = replaceList oldname newname ("mems" `at` cdoc)
         newcdoc = ["mems" -: newmems] `merge` cdoc
     mludoc <- liftLIO $ withHircPolicy $ findOne $ select ["name" -: usr] "users"
     udoc <- liftLIO $ unlabel $ fromJust mludoc
@@ -169,12 +185,6 @@ listChats usr = trace "listChats" $ do
     Just lchandoc -> do
       chandoc <- liftLIO $ unlabel lchandoc
       channel <- fromDocument chandoc
-      let curmems = channelMems channel
-      if usr `elem` curmems
-        then return ()
-        else do -- add current user to the list of channel members
-          let newdoc = merge [ "mems" -: (curmems ++ [usr]) ] chandoc
-          liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
       matype <- requestHeader "accept"
       case matype of
         Just atype |  "application/json" `S8.isInfixOf` atype ->
@@ -210,4 +220,10 @@ findAllUsers q = do
 
 replaceList :: UserName -> UserName -> [UserName] -> [UserName]
 replaceList old new list = (filter (\e -> e /= old) list) ++ [new]
+
+joinList :: UserName -> [UserName] -> [UserName]
+joinList e list =
+  if e `elem` list
+  then list
+  else list ++ [e]
 

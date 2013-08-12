@@ -1,6 +1,22 @@
 
 $(document).ready(function() {
 
+  $("#addMemForm").submit(function(e) {  // add new user to list of channel members
+    e.preventDefault();
+    var dataStr = $(this).serialize();
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: "adduser",
+      data: dataStr,
+      success: function(data) {
+        pollUsers();
+      },
+    });
+  });
+
+  $("#addMemForm").submit();
+
   $("#edituserform").hide();
   pollUsers();
   pollChats();
@@ -40,6 +56,7 @@ $(document).ready(function() {
   $("#edituserbttn").click(function() {
     $(this).hide();
     $("#edituserform").show();
+    $(this).show();
   });
 
   $("#edituserform").submit(function(e) {
@@ -57,6 +74,8 @@ $(document).ready(function() {
         var newname = data;
         $("#myname").text(newname);
         curuser = newname;
+        $("#oldname").val(newname);
+        $("#edituserform").hide();
         return data;
       },
     });

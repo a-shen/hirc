@@ -107,6 +107,10 @@ showChatPage chats user chan = trace "showChatPage" $ do
   if (user `elem` channelAdmins chan)
     then p $ a ! href (toValue (url ++ "/edit")) $ "Edit Channel"
     else ""
+  form ! id "addMemForm" ! action (toValue (url ++ "/adduser")) ! method "POST" $ do
+    -- add this user to the channel's list of members; form will be submitted immediately by js
+    trace ("user: " ++ T.unpack user) $ ""
+    input ! type_ "hidden" ! name "user" ! value (toValue $ T.unpack user)
   form ! id "removeMemForm" ! action (toValue (url ++ "/remuser")) ! method "POST" $ do
     -- remove user from channel; form will be submitted when the user leaves the page
     input ! type_ "hidden" ! name "user" ! value (toValue $ T.unpack user)
@@ -120,8 +124,9 @@ showChatPage chats user chan = trace "showChatPage" $ do
         button ! id "edituserbttn" $ "Edit"
         let act = ("/" ++ (show chanId) ++ "/edituser")
         form ! id "edituserform" ! action (toValue act) ! method "POST" $ do
-          label ! for "name" $ "New username: "
-          input ! type_ "text" ! name "name"
+          label ! for "newname" $ "New username: "
+          input ! type_ "text" ! name "newname"
+          input ! type_ "hidden" ! name "oldname" ! id "oldname" ! value (toValue $ T.unpack user)
           input ! type_ "submit" ! value "Submit"
       div ! id "users" $ h3 $ "Users in chat room:" -- chats.js will list users
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ T.unpack user
