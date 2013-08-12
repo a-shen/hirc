@@ -55,7 +55,6 @@ server = mkRouter $ do
       return . respondHtml "Channels" $ indexChannels chans usr
 
   F.get "/channels/new" $ withUserOrDoAuth $ \usr -> do
-    liftLIO $ withHircPolicy $ checkUser usr
     return $ respondHtml "New Channel" $ newChannel usr
 
   F.post "/channels" $ withUserOrDoAuth $ \usr -> do
@@ -69,7 +68,6 @@ server = mkRouter $ do
     return $ redirectTo "/channels"
 
   F.get "/:chanId/edit" $ withUserOrDoAuth $ \usr -> do
-    liftLIO $ withHircPolicy $ checkUser usr
     (Just sid) <- queryParam "chanId"
     let cid = read (S8.unpack sid) :: ObjectId
     mchan <- liftLIO $ withHircPolicy $ findWhere $ select ["_id" -: cid] "channels"
@@ -159,7 +157,6 @@ server = mkRouter $ do
 chatsController :: RESTController
 chatsController = do
   REST.index $ withUserOrDoAuth $ \usr -> do
-    liftLIO $ withHircPolicy $ checkUser usr
     listChats usr
 
   REST.create $ withUserOrDoAuth $ \usr -> do
@@ -193,17 +190,6 @@ listChats usr = trace "listChats" $ do
           let cname = toHtml $ channelName channel
           return $ respondHtml cname $ showChatPage chats usr channel
     _ -> return notFound
-
-checkUser :: UserName -> DBAction ()
-checkUser uname = do  -- add user to db if it's not already in there
-  let username = (T.unpack uname) :: String
-  usr <- liftLIO $ withHircPolicy $ findAllUsers $ select ["name" -: username] "users"
-  case usr of
-    [] -> do
-      let udoc = ["name" -: (username :: String)] :: HsonDocument
-      insert "users" udoc
-      return ()
-    _ -> return ()
 
 findAllUsers :: Query -> DBAction [UserName]
 findAllUsers q = do

@@ -151,7 +151,6 @@ pdt = TimeZone { timeZoneMinutes = -420,
 respondHtml ctitle content = okHtml $ renderHtml $ docTypeHtml $ do
   head $ do
     title ctitle
-    --stylesheet "/static/css/bootstrap.css"
     stylesheet "/static/css/bootstrap1.css"
     stylesheet "/static/css/application.css"
     script ! src "/static/js/jquery.min.js" $ ""
@@ -170,5 +169,4 @@ showList :: [UserName] -> String
 showList [] = ""
 showList [a] = T.unpack a
 showList (x:xs) = (showList [x]) ++ "," ++ showList xs
-
 

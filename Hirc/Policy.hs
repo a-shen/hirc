@@ -24,7 +24,6 @@ import           Control.Monad
 
 import           LIO
 import           LIO.DCLabel
---import           LIO.DCLabel.Core
 import           LIO.TCB
 
 import           Hails.Data.Hson
@@ -71,17 +70,6 @@ instance PolicyModule HircPolicy where
          document $ \doc -> do
            readers ==> unrestricted
            writers ==> unrestricted
-       collection "users" $ do
-         access $ do
-           readers ==> unrestricted
-           writers ==> unrestricted
-         clearance $ do
-           secrecy   ==> this
-           integrity ==> unrestricted
-         document $ \doc -> do
-           readers ==> unrestricted
-           writers ==> unrestricted
-         field "name" key
      return $ HircPolicyTCB priv
        where this = privDesc priv
              root = principal "root"
@@ -94,7 +82,4 @@ instance DCLabeledRecord HircPolicy Channel where
 
 withHircPolicy :: DBAction a -> DC a
 withHircPolicy act = withPolicyModule (\(_ :: HircPolicy) -> act)
-
---withHircPolicy act = withPolicyModule $
-  -- \(HircPolicyTCB noPrivs) -> act
 
