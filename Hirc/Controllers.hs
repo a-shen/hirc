@@ -44,6 +44,9 @@ server = mkRouter $ do
   routeVar "chanId" $ do
     routeName "chats" chatsController
 
+  F.get "/" $ withUserOrDoAuth $ \usr -> do
+    return $ redirectTo "/channels"
+
   F.get "/channels" $ withUserOrDoAuth $ \usr -> do
     liftLIO $ withHircPolicy $ checkUser usr
     chans <- liftLIO . withHircPolicy $ trace "here" $ 
@@ -86,12 +89,12 @@ server = mkRouter $ do
     liftLIO $ withHircPolicy $ trace "saving doc" $ save "channels" newdoc
     trace "saved doc" $ return $ redirectTo "/channels"
 
-  F.get "/:chanId/users" $ trace "getting users" $ do
+  F.get "/:chanId/users" $ withUserOrDoAuth $ \usr -> trace "getting users" $ do
     (Just sid) <- queryParam "chanId"
     let cid = read (S8.unpack sid) :: ObjectId
     mchan <- liftLIO $ withHircPolicy $ findWhere $ select ["_id" -: cid] "channels"
     let users = case mchan of
-                  Just chan -> map T.unpack (channelMems chan)
+                  Just chan -> map T.unpack $ filter (/= usr) $ channelMems chan
                   _ -> []
     matype <- requestHeader "accept"
     case matype of
@@ -100,8 +103,8 @@ server = mkRouter $ do
       _ -> return $ okHtml ""
  
   -- Remove user from the channel's member list. Username is the "user" field in the form.
-  F.post "/:chanid/remuser" $ trace "REMOVE USER CALLED" $ do
-    (Just sid) <- queryParam "chanid"
+  F.post "/:chanId/remuser" $ trace "REMOVE USER CALLED" $ do
+    (Just sid) <- queryParam "chanId"
     let cid = read (S8.unpack sid) :: ObjectId
     mlcdoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: cid] "channels"
     cdoc <- liftLIO $ unlabel $ fromJust mlcdoc
@@ -114,6 +117,27 @@ server = mkRouter $ do
     let newdoc = merge ["mems" -: newmems] cdoc
     liftLIO $ withHircPolicy $ trace "saving channel doc" $ save "channels" newdoc
     trace "saved channel doc" $ return $ redirectTo "/channels"
+    
+  F.post "/:chanId/edituser" $ withUserOrDoAuth $ \usr -> trace "post /edituser" $ do
+    (Just sid) <- queryParam "chanId"
+    let cid = read (S8.unpack sid) :: ObjectId
+    mlcdoc <- liftLIO $ withHircPolicy $ findOne $ select ["_id" -: cid] "channels"
+    cdoc <- liftLIO $ unlabel $ fromJust mlcdoc
+    reqdoc <- request >>= labeledRequestToHson >>= (liftLIO . unlabel)
+    let newname = ("name" `at` reqdoc) :: UserName
+        newmems = replaceList usr newname ("mems" `at` cdoc)
+        newcdoc = ["mems" -: newmems] `merge` cdoc
+    mludoc <- liftLIO $ withHircPolicy $ findOne $ select ["name" -: usr] "users"
+    udoc <- liftLIO $ unlabel $ fromJust mludoc
+    let newudoc = ["name" -: newname] `merge` udoc
+    liftLIO $ withHircPolicy $ do
+      save "channels" newcdoc
+      save "users" newudoc
+    matype <- requestHeader "accept"
+    case matype of
+      Just atype |  "application/json" `S8.isInfixOf` atype ->
+        return $ ok "application/json" (encode $ toJSON $ T.unpack newname)
+      _ -> return $ redirectTo ("/channels/" ++ S8.unpack sid)
 
 
 chatsController :: RESTController
@@ -184,11 +208,6 @@ findAllUsers q = do
               let username = "name" `at` doc
               getAll cur (list ++ [username])
 
-joinList :: UserName -> [UserName] -> [UserName]
-joinList e list = if e `elem` list
-                then list
-                else list ++ [e]
+replaceList :: UserName -> UserName -> [UserName] -> [UserName]
+replaceList old new list = (filter (\e -> e /= old) list) ++ [new]
 
-
-      --lrec <- fromLabeledDocument ldoc
-      --saveLabeledRecord (lrec :: DCLabeled Channel)

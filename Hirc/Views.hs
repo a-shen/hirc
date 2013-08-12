@@ -113,7 +113,17 @@ showChatPage chats user chan = trace "showChatPage" $ do
   let chanId = fromJust $ channelId chan
   div ! class_ "row-fluid" $ do
     div ! id "chats" ! class_ "span6" $ "" -- chats.js will index all chats
-    div ! id "users" $ h3 $ "Users in chat room:" -- chats.js will list users
+    div ! id "allusers" $ do
+      h3 $ "Users in chat room:" -- chats.js will list users
+      div ! id "me" $ ul $ li $ do
+        p ! id "myname" $ toHtml $ T.unpack user
+        button ! id "edituserbttn" $ "Edit"
+        let act = ("/" ++ (show chanId) ++ "/edituser")
+        form ! id "edituserform" ! action (toValue act) ! method "POST" $ do
+          label ! for "name" $ "New username: "
+          input ! type_ "text" ! name "name"
+          input ! type_ "submit" ! value "Submit"
+      div ! id "users" $ h3 $ "Users in chat room:" -- chats.js will list users
   div ! id "currentUser" ! class_ "hidden" $ toHtml $ T.unpack user
   newChat user chanId -- show form for making new chat
 

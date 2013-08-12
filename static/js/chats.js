@@ -1,11 +1,13 @@
 
 $(document).ready(function() {
 
+  $("#edituserform").hide();
   pollUsers();
   pollChats();
 
   var last_id = "";  // id of the last chat on the page
 
+  // Creating chat
   $("#chatForm").submit(function() {
     var dataString = $("#chatForm").serialize();
     var text = $("#text").val();
@@ -34,8 +36,35 @@ $(document).ready(function() {
   $("#text").val("");
   $("#author").val(curuser);
 
+  // Editing username
+  $("#edituserbttn").click(function() {
+    $(this).hide();
+    $("#edituserform").show();
+  });
+
+  $("#edituserform").submit(function(e) {
+    e.preventDefault();
+    var dataString = $("#edituserform").serialize();
+    var urlarr = document.URL.split("/");
+    var dest = "/" + urlarr[3] + "/edituser" // destination url
+    $.ajax({
+      dataType: "json",
+      type: "POST",
+      url: dest,
+      data: dataString,
+      success: function(data) {
+        // var newname = data[0];
+        var newname = data;
+        $("#myname").text(newname);
+        curuser = newname;
+        return data;
+      },
+    });
+  });
+
+
+  // When the user leaves, put a chat notification & remove from the user list
   window.onbeforeunload = function() {
-    // Put a chat saying that this user has left
     var curuser = $("#currentUser").text();
     $("#text").val(curuser + " has left.");
     $("#author").val("");
@@ -87,9 +116,13 @@ $(document).ready(function() {
         success: function(data) {
           console.log("users: " + data);
           $("#users").empty();
-          var html = '<h3>Users in chat room:</h3><ul>'
+          var html = '<ul>';
+          console.log("curuser: " + curuser);
           for (var i = 0; i < data.length; i++) {
-            html += '<li>' + data[i] + '</li>'
+            var u = data[i];
+            if (u != curuser) {
+              html += '<li>' + u + '</li>'
+            }
           }
           html += '</ul>'
           $("#users").append(html);
